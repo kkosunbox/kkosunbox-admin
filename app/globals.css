@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+      'Noto Sans KR', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-surface-muted text-text-primary;
+  }
+
+  * {
+    @apply border-border;
+  }
+}
+
+@layer components {
+  /* ── 버튼 ──────────────────────────────────────── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-brand-600 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-surface-input px-5 py-2.5 text-sm font-medium text-text-secondary transition-all duration-200 hover:brightness-95 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-red-500 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-red-600 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-text-secondary transition-all duration-200 hover:bg-surface-input active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  /* ── 카드 ──────────────────────────────────────── */
+  .card {
+    @apply rounded-2xl bg-white shadow-card;
+  }
+
+  /* ── 인풋 ──────────────────────────────────────── */
+  .input-base {
+    @apply w-full rounded-xl border border-border bg-surface-input/50 px-4 py-3 text-sm text-text-primary placeholder-text-muted/60 transition-all duration-200 focus:border-brand-400 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* ── 뱃지 ──────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  /* ── 테이블 ─────────────────────────────────────── */
+  .table-th {
+    @apply whitespace-nowrap px-5 py-3 text-left text-xs font-semibold text-text-muted;
+  }
+
+  .table-td {
+    @apply whitespace-nowrap px-5 py-4 text-sm text-text-primary;
+  }
+
+  /* ── 타이포그래피 ────────────────────────────────── */
+  .page-title {
+    @apply text-lg font-bold text-text-primary;
+  }
+
+  .section-title {
+    @apply text-base font-semibold text-text-primary;
+  }
+
+  /* ── 폼 라벨 ─────────────────────────────────────── */
+  .form-label {
+    @apply mb-2 block text-sm font-medium text-text-secondary;
+  }
+
+  .form-label-optional::after {
+    content: '선택';
+    @apply ml-1.5 text-xs font-normal text-text-muted;
+  }
+
+  /* ── 폼 에러 배너 ─────────────────────────────────── */
+  .form-error-banner {
+    @apply flex items-start gap-2.5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600;
+  }
+
+  /* ── 로딩 스피너 ─────────────────────────────────── */
+  .spinner {
+    @apply h-7 w-7 animate-spin rounded-full border-2 border-brand-100 border-t-brand-400;
+  }
+
+  /* ── 필터 탭 (세그먼트 컨트롤) ──────────────────── */
+  .filter-tabs {
+    @apply flex items-center rounded-xl bg-surface-input/60 p-1 gap-0.5;
+  }
+
+  .filter-tab {
+    @apply rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-150 text-text-muted hover:text-text-secondary;
+  }
+
+  .filter-tab-active {
+    @apply bg-white text-text-primary shadow-sm;
+  }
+
+  /* ── 검색 래퍼 ───────────────────────────────────── */
+  .search-wrapper {
+    @apply flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 transition-colors focus-within:border-brand-300;
+  }
+}

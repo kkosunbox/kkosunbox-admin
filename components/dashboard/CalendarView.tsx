@@ -232,7 +232,7 @@ export function CalendarView() {
         <div className="min-w-0 flex-1">
           {isLoading ? (
             <div className="flex h-96 items-center justify-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-200 border-t-brand-500" />
+              <div className="spinner" />
             </div>
           ) : isError ? (
             <div className="flex h-96 flex-col items-center justify-center gap-2 text-sm text-red-500">
@@ -374,7 +374,13 @@ export function CalendarView() {
               )}
             </div>
 
-            <div className={isDesktop ? "min-h-0 flex-1 overflow-y-auto p-3" : "max-h-72 overflow-y-auto p-3"}>
+            <div
+              className={
+                isDesktop
+                  ? "min-h-0 flex-1 overflow-y-auto p-3"
+                  : "max-h-72 overflow-y-auto p-3"
+              }
+            >
               {!selectedDate ? (
                 <div className="mt-10 flex flex-col items-center gap-2 text-center">
                   <p className="text-xs font-medium text-text-muted">

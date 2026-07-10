@@ -78,7 +78,7 @@ export default function CustomersPage() {
 
       {/* Table */}
       <div className="card overflow-hidden">
-        <div className="flex items-center justify-between border-b border-border px-5 py-3">
+        <div className="flex items-center justify-between px-5 py-3">
           <p className="text-sm font-medium text-text-secondary">
             총 <span className="font-bold text-text-primary">{total}</span>명
           </p>
@@ -93,8 +93,8 @@ export default function CustomersPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="border-b border-border bg-surface-muted">
-                <tr>
+              <thead>
+                <tr className="border-b border-border-light bg-surface-muted/60">
                   <th className="table-th">ID</th>
                   <th className="table-th">이메일</th>
                   <th className="table-th">연락처</th>
@@ -104,7 +104,7 @@ export default function CustomersPage() {
                   <th className="table-th">가입일</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-y divide-border-light">
                 {users.map((user) => {
                   const statusInfo = USER_STATUS_MAP[user.status];
                   return (
@@ -135,7 +135,7 @@ export default function CustomersPage() {
         )}
 
         {totalPages > 1 && (
-          <div className="border-t border-border px-5 py-4">
+          <div className="border-t border-border-light px-5 py-4">
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
           </div>
         )}

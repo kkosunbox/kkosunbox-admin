@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { CreditCard, MapPin, User, Calendar, PauseCircle } from 'lucide-react';
+import { CreditCard, MapPin, User, PauseCircle } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
 import { PetProfileCard } from '@/components/shared/PetProfileCard';
@@ -41,121 +41,124 @@ export function SubscriptionDetailModal({
     >
       {isLoading ? (
         <div className="flex h-48 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-200 border-t-brand-500" />
+          <div className="spinner" />
         </div>
       ) : subscription ? (
         <div className="space-y-5">
-          {/* Header */}
-          <div className="flex items-start justify-between rounded-xl bg-surface-muted p-4">
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono text-xs text-text-muted">
-                  구독 #{subscription.id}
-                </span>
-                {statusInfo && (
-                  <Badge label={statusInfo.label} color={statusInfo.color} />
-                )}
-                {subscription.isPaused && (
-                  <Badge label="쉬어가기" color="bg-blue-100 text-blue-700" />
-                )}
-              </div>
-              <p className="mt-1 font-bold text-text-primary">
-                {subscription.plan?.name ?? '구독 플랜'}
-              </p>
-              <p className="text-sm text-text-muted">
-                {subscription.user?.email ?? '-'}
-              </p>
+          {/* Hero */}
+          <div className="detail-hero">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-mono text-xs text-text-muted">
+                구독 #{subscription.id}
+              </span>
+              {statusInfo && (
+                <Badge label={statusInfo.label} color={statusInfo.color} />
+              )}
+              {subscription.isPaused && (
+                <Badge label="쉬어가기" color="bg-blue-50 text-blue-600" />
+              )}
             </div>
-            <div className="text-right">
-              <p className="text-xl font-bold text-brand-500">
-                {subscription.plan?.monthlyPrice
-                  ? formatCurrency(
-                      subscription.plan.monthlyPrice * (subscription.quantity ?? 1),
-                    )
-                  : '-'}
-              </p>
-              <p className="text-xs text-text-muted">
-                월 청구액
-                {(subscription.quantity ?? 1) > 1 && (
-                  <span className="ml-1 text-text-muted">
-                    ({formatCurrency(subscription.plan!.monthlyPrice)} × {subscription.quantity})
-                  </span>
-                )}
-              </p>
+            <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-lg font-bold leading-tight text-text-primary">
+                  {subscription.plan?.name ?? '구독 플랜'}
+                </p>
+                <p className="mt-0.5 text-sm text-text-muted">
+                  {subscription.user?.email ?? '-'}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold tracking-tight text-brand-600">
+                  {subscription.plan?.monthlyPrice
+                    ? formatCurrency(
+                        subscription.plan.monthlyPrice * (subscription.quantity ?? 1),
+                      )
+                    : '-'}
+                </p>
+                <p className="text-xs text-text-muted">
+                  월 청구액
+                  {(subscription.quantity ?? 1) > 1 && (
+                    <span className="ml-1">
+                      ({formatCurrency(subscription.plan!.monthlyPrice)} × {subscription.quantity})
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
           </div>
 
           {/* 쉬어가기 안내 */}
           {subscription.isPaused && (
-            <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-              <PauseCircle size={15} className="shrink-0 text-blue-500" />
-              <span>쉬어가기가 활성화되어 있습니다. 이번 결제일에 결제가 건너뜁니다.</span>
+            <div className="detail-callout bg-blue-50">
+              <div className="detail-callout-icon">
+                <PauseCircle size={16} className="text-blue-500" />
+              </div>
+              <p className="text-sm text-blue-700">
+                쉬어가기가 활성화되어 있습니다. 이번 결제일에 결제가 건너뜁니다.
+              </p>
             </div>
           )}
 
-          {/* Next billing & dates */}
-          <div className="flex items-center gap-3 rounded-xl border border-border px-4 py-3">
-            <Calendar size={15} className="shrink-0 text-brand-500" />
-            <div className="flex flex-wrap gap-x-8 gap-y-1 text-sm">
-              <div>
-                <span className="text-text-muted">다음 결제일 </span>
-                <span className="font-semibold text-text-primary">
-                  {formatDate(subscription.nextBillingDate)}
-                </span>
+          {/* 주요 일정: 스탯 타일 */}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="detail-stat">
+              <p className="text-xs text-text-muted">다음 결제일</p>
+              <p className="mt-0.5 text-sm font-semibold text-text-primary">
+                {formatDate(subscription.nextBillingDate)}
                 {subscription.isPaused && (
-                  <span className="ml-1.5 text-xs font-medium text-blue-500">(건너뜀)</span>
+                  <span className="ml-1 text-xs font-medium text-blue-500">건너뜀</span>
                 )}
-              </div>
-              {subscription.anchorDay != null && (
-                <div>
-                  <span className="text-text-muted">결제 기준일 </span>
-                  <span className="font-medium text-text-primary">
-                    매월 {subscription.anchorDay}일
-                  </span>
-                </div>
-              )}
-              <div>
-                <span className="text-text-muted">구독 시작 </span>
-                <span className="font-medium text-text-primary">
-                  {formatDate(subscription.createdAt)}
-                </span>
-              </div>
-              {subscription.cancelledAt && (
-                <div>
-                  <span className="text-text-muted">취소일 </span>
-                  <span className="font-medium text-text-primary">
-                    {formatDate(subscription.cancelledAt)}
-                  </span>
-                </div>
-              )}
-              {subscription.renewalFailureCount > 0 && (
-                <div>
-                  <span className="text-text-muted">결제 실패 </span>
-                  <span className="font-medium text-red-500">
-                    {subscription.renewalFailureCount}회
-                  </span>
-                </div>
-              )}
+              </p>
             </div>
+            {subscription.anchorDay != null && (
+              <div className="detail-stat">
+                <p className="text-xs text-text-muted">결제 기준일</p>
+                <p className="mt-0.5 text-sm font-semibold text-text-primary">
+                  매월 {subscription.anchorDay}일
+                </p>
+              </div>
+            )}
+            <div className="detail-stat">
+              <p className="text-xs text-text-muted">구독 시작</p>
+              <p className="mt-0.5 text-sm font-semibold text-text-primary">
+                {formatDate(subscription.createdAt)}
+              </p>
+            </div>
+            {subscription.cancelledAt && (
+              <div className="detail-stat">
+                <p className="text-xs text-text-muted">취소일</p>
+                <p className="mt-0.5 text-sm font-semibold text-text-primary">
+                  {formatDate(subscription.cancelledAt)}
+                </p>
+              </div>
+            )}
+            {subscription.renewalFailureCount > 0 && (
+              <div className="detail-stat bg-red-50">
+                <p className="text-xs text-red-400">결제 실패</p>
+                <p className="mt-0.5 text-sm font-semibold text-red-500">
+                  {subscription.renewalFailureCount}회
+                </p>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {/* Customer */}
+          {/* Sections */}
+          <div className="detail-sections">
             {subscription.user && (
-              <div className="space-y-2 rounded-xl border border-border p-4">
-                <div className="flex items-center gap-1.5">
-                  <User size={14} className="text-brand-500" />
-                  <span className="text-sm font-semibold text-text-primary">고객 정보</span>
+              <section className="detail-section">
+                <div className="detail-section-label">
+                  <User size={13} className="text-brand-400" />
+                  고객 정보
                 </div>
-                <dl className="space-y-1 text-sm">
-                  <div className="flex justify-between gap-2">
+                <dl className="space-y-1.5">
+                  <div className="detail-row">
                     <dt className="shrink-0 text-text-muted">이메일</dt>
                     <dd className="truncate font-medium text-text-primary">
                       {subscription.user.email}
                     </dd>
                   </div>
                   {subscription.user.phone && (
-                    <div className="flex justify-between">
+                    <div className="detail-row">
                       <dt className="text-text-muted">연락처</dt>
                       <dd className="font-medium text-text-primary">
                         {subscription.user.phone}
@@ -163,71 +166,63 @@ export function SubscriptionDetailModal({
                     </div>
                   )}
                 </dl>
-              </div>
+              </section>
             )}
 
-            {/* Plan */}
             {subscription.plan && (
-              <div className="space-y-2 rounded-xl border border-border p-4">
-                <div className="flex items-center gap-1.5">
-                  <CreditCard size={14} className="text-brand-500" />
-                  <span className="text-sm font-semibold text-text-primary">플랜 정보</span>
+              <section className="detail-section">
+                <div className="detail-section-label">
+                  <CreditCard size={13} className="text-brand-400" />
+                  플랜 정보
                 </div>
-                <dl className="space-y-1 text-sm">
-                  <div className="flex justify-between">
+                <dl className="space-y-1.5">
+                  <div className="detail-row">
                     <dt className="text-text-muted">플랜명</dt>
                     <dd className="font-medium text-text-primary">{subscription.plan.name}</dd>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="detail-row">
                     <dt className="text-text-muted">단가</dt>
                     <dd className="font-medium text-text-primary">
                       {formatCurrency(subscription.plan.monthlyPrice)}
                     </dd>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="detail-row">
                     <dt className="text-text-muted">수량</dt>
                     <dd className="font-medium text-text-primary">
                       {subscription.quantity ?? 1}개
                     </dd>
                   </div>
-                  <div className="flex justify-between border-t border-border pt-1">
-                    <dt className="text-text-muted">월 청구액</dt>
-                    <dd className="font-semibold text-brand-500">
-                      {formatCurrency(
-                        subscription.plan.monthlyPrice * (subscription.quantity ?? 1),
-                      )}
-                    </dd>
-                  </div>
                   {subscription.plan.description && (
-                    <div className="flex justify-between gap-2">
+                    <div className="detail-row">
                       <dt className="shrink-0 text-text-muted">설명</dt>
                       <dd className="text-right text-text-secondary">
                         {subscription.plan.description}
                       </dd>
                     </div>
                   )}
+                  <div className="detail-row rounded-xl bg-surface-muted px-3 py-2.5 !mt-3">
+                    <dt className="font-semibold text-text-primary">월 청구액</dt>
+                    <dd className="font-bold text-brand-600">
+                      {formatCurrency(
+                        subscription.plan.monthlyPrice * (subscription.quantity ?? 1),
+                      )}
+                    </dd>
+                  </div>
                 </dl>
-              </div>
+              </section>
             )}
 
-            {/* Pet */}
             {petProfile && (
-              <PetProfileCard
-                petProfile={petProfile}
-                className={
-                  (petProfile.checklistAnswers?.length ?? 0) > 0
-                    ? 'sm:col-span-2'
-                    : ''
-                }
-              />
+              <section className="detail-section">
+                <PetProfileCard petProfile={petProfile} />
+              </section>
             )}
 
-            {/* Delivery Address */}
             {deliveryAddress && (
-              <div className="space-y-2 rounded-xl border border-border p-4">
-                <div className="flex items-center gap-1.5">
-                  <MapPin size={14} className="text-brand-500" />
-                  <span className="text-sm font-semibold text-text-primary">배송지</span>
+              <section className="detail-section">
+                <div className="detail-section-label">
+                  <MapPin size={13} className="text-brand-400" />
+                  배송지
                 </div>
                 <div className="space-y-0.5 text-sm">
                   <p className="font-semibold text-text-primary">
@@ -247,7 +242,7 @@ export function SubscriptionDetailModal({
                     <p className="text-xs text-text-muted">메모: {deliveryAddress.memo}</p>
                   )}
                 </div>
-              </div>
+              </section>
             )}
           </div>
         </div>

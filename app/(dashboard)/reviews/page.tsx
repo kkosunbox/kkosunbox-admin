@@ -226,8 +226,8 @@ export default function ReviewsPage() {
                         label={review.isHidden ? '숨김' : '노출'}
                         color={
                           review.isHidden
-                            ? 'bg-gray-100 text-gray-600'
-                            : 'bg-green-100 text-green-800'
+                            ? 'bg-surface-input text-text-muted'
+                            : 'bg-emerald-50 text-emerald-600'
                         }
                       />
                     </td>
@@ -357,8 +357,8 @@ export default function ReviewsPage() {
                   label={detail.isHidden ? '숨김' : '노출'}
                   color={
                     detail.isHidden
-                      ? 'bg-gray-100 text-gray-600'
-                      : 'bg-green-100 text-green-800'
+                      ? 'bg-surface-input text-text-muted'
+                      : 'bg-emerald-50 text-emerald-600'
                   }
                 />
               </div>

@@ -28,16 +28,19 @@ interface NavItem {
 
 const NAV_GROUPS: { label?: string; items: NavItem[] }[] = [
   {
-    items: [
-      { label: "대시보드", href: "/", icon: LayoutDashboard },
-    ],
+    items: [{ label: "대시보드", href: "/", icon: LayoutDashboard }],
   },
   {
     label: "운영 관리",
     items: [
       { label: "주문 / 배송", href: "/orders", icon: ShoppingBag },
       { label: "고객 관리", href: "/customers", icon: Users, adminOnly: true },
-      { label: "문의 관리", href: "/inquiries", icon: MessageSquare, adminOnly: true },
+      {
+        label: "문의 관리",
+        href: "/inquiries",
+        icon: MessageSquare,
+        adminOnly: true,
+      },
       { label: "구독 현황", href: "/subscriptions", icon: CreditCard },
     ],
   },
@@ -47,8 +50,18 @@ const NAV_GROUPS: { label?: string; items: NavItem[] }[] = [
       { label: "구독 플랜", href: "/plans", icon: Tag, adminOnly: true },
       { label: "쿠폰 관리", href: "/coupons", icon: Ticket, adminOnly: true },
       { label: "리뷰 관리", href: "/reviews", icon: Star, adminOnly: true },
-      { label: "인플루언서", href: "/influencers", icon: TrendingUp, adminOnly: true },
-      { label: "시스템 설정", href: "/settings", icon: Settings, adminOnly: true },
+      {
+        label: "인플루언서",
+        href: "/influencers",
+        icon: TrendingUp,
+        adminOnly: true,
+      },
+      {
+        label: "시스템 설정",
+        href: "/settings",
+        icon: Settings,
+        adminOnly: true,
+      },
     ],
   },
 ];
@@ -98,7 +111,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-2">
         {NAV_GROUPS.map((group, gi) => {
-          const visibleItems = group.items.filter((item) => !item.adminOnly || isAdmin);
+          const visibleItems = group.items.filter(
+            (item) => !item.adminOnly || isAdmin,
+          );
           if (visibleItems.length === 0) return null;
           return (
             <div key={gi} className={cn(gi > 0 && "mt-5")}>
@@ -127,9 +142,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         )}
                         <item.icon
                           size={16}
-                          className={active ? "text-brand-500" : "text-text-muted"}
+                          className={
+                            active ? "text-brand-500" : "text-text-muted"
+                          }
                         />
-                        <span className="flex-1 leading-none">{item.label}</span>
+                        <span className="flex-1 leading-none">
+                          {item.label}
+                        </span>
                       </Link>
                     </li>
                   );

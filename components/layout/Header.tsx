@@ -1,29 +1,29 @@
-'use client';
+"use client";
 
-import { usePathname } from 'next/navigation';
-import { Menu, RefreshCw } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
-import { cn } from '@/lib/utils';
+import { usePathname } from "next/navigation";
+import { Menu, RefreshCw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 
 const PAGE_TITLES: Record<string, string> = {
-  '/': '대시보드',
-  '/orders': '주문 / 배송 관리',
-  '/customers': '고객 관리',
-  '/inquiries': '문의 관리',
-  '/subscriptions': '구독 현황',
-  '/plans': '구독 플랜',
-  '/coupons': '쿠폰 관리',
-  '/reviews': '리뷰 관리',
-  '/influencers': '인플루언서 관리',
-  '/settings': '시스템 설정',
+  "/": "대시보드",
+  "/orders": "주문 / 배송 관리",
+  "/customers": "고객 관리",
+  "/inquiries": "문의 관리",
+  "/subscriptions": "구독 현황",
+  "/plans": "구독 플랜",
+  "/coupons": "쿠폰 관리",
+  "/reviews": "리뷰 관리",
+  "/influencers": "인플루언서 관리",
+  "/settings": "시스템 설정",
 };
 
 function getPageTitle(pathname: string): string {
-  if (pathname === '/') return '대시보드';
+  if (pathname === "/") return "대시보드";
   const matched = Object.entries(PAGE_TITLES).find(
-    ([key]) => key !== '/' && pathname.startsWith(key),
+    ([key]) => key !== "/" && pathname.startsWith(key),
   );
-  return matched?.[1] ?? '관리자';
+  return matched?.[1] ?? "관리자";
 }
 
 interface HeaderProps {
@@ -45,8 +45,8 @@ export function Header({ onMenuToggle }: HeaderProps) {
         <button
           onClick={onMenuToggle}
           className={cn(
-            'flex h-8 w-8 items-center justify-center rounded-xl text-text-muted',
-            'transition-colors hover:bg-surface-muted hover:text-text-primary lg:hidden',
+            "flex h-8 w-8 items-center justify-center rounded-xl text-text-muted",
+            "transition-colors hover:bg-surface-muted hover:text-text-primary lg:hidden",
           )}
           aria-label="메뉴 열기"
         >

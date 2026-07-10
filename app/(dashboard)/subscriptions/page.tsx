@@ -107,7 +107,7 @@ export default function SubscriptionsPage() {
                       </td>
                       <td className="table-td">
                         {sub.isPaused
-                          ? <Badge label="쉬어가기" color="bg-blue-100 text-blue-700" />
+                          ? <Badge label="쉬어가기" color="bg-blue-50 text-blue-600" />
                           : subStatus && <Badge label={subStatus.label} color={subStatus.color} />
                         }
                       </td>

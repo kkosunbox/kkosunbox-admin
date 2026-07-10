@@ -6,6 +6,14 @@ import { AuthProvider } from '@/providers/AuthProvider';
 export const metadata: Metadata = {
   title: '꼬순박스 관리자',
   description: '꼬순박스 사장님 & 관리자 페이지',
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
 };
 
 export default function RootLayout({

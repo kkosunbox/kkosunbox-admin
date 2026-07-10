@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   forwardRef,
@@ -6,14 +6,16 @@ import {
   type InputHTMLAttributes,
   type TextareaHTMLAttributes,
   type ReactNode,
-} from 'react';
-import { Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from "react";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // ── Input FormField ─────────────────────────────────────────────────────────
 
-export interface FormFieldProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'id' | 'placeholder'> {
+export interface FormFieldProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "id" | "placeholder"
+> {
   label: string;
   error?: string;
   hint?: string;
@@ -25,13 +27,23 @@ export interface FormFieldProps
 
 export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
   (
-    { label, error, hint, optional, suffix, className, id, type = 'text', ...props },
+    {
+      label,
+      error,
+      hint,
+      optional,
+      suffix,
+      className,
+      id,
+      type = "text",
+      ...props
+    },
     ref,
   ) => {
     const [showPassword, setShowPassword] = useState(false);
-    const fieldId = id ?? `field-${label.replace(/\s+/g, '-')}`;
-    const isPassword = type === 'password';
-    const actualType = isPassword ? (showPassword ? 'text' : 'password') : type;
+    const fieldId = id ?? `field-${label.replace(/\s+/g, "-")}`;
+    const isPassword = type === "password";
+    const actualType = isPassword ? (showPassword ? "text" : "password") : type;
     const hasSuffix = Boolean(suffix) || isPassword;
 
     return (
@@ -43,16 +55,15 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
             type={actualType}
             placeholder=" "
             className={cn(
-              'peer w-full rounded-xl border',
-              'bg-surface-input/50 px-4 pb-[10px] pt-[22px]',
-              'text-sm text-text-primary outline-none',
-              'transition-all duration-200',
-              'border-border placeholder-transparent',
-              'focus:border-brand-400 focus:bg-white',
-              'disabled:cursor-not-allowed disabled:opacity-50',
-              hasSuffix && 'pr-12',
-              error &&
-                'border-red-300 bg-red-50/30 focus:border-red-400',
+              "peer w-full rounded-xl border",
+              "bg-surface-input/50 px-4 pb-[10px] pt-[22px]",
+              "text-sm text-text-primary outline-none",
+              "transition-all duration-200",
+              "border-border placeholder-transparent",
+              "focus:border-brand-400 focus:bg-white",
+              "disabled:cursor-not-allowed disabled:opacity-50",
+              hasSuffix && "pr-12",
+              error && "border-red-300 bg-red-50/30 focus:border-red-400",
               className,
             )}
             {...props}
@@ -60,19 +71,19 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
           <label
             htmlFor={fieldId}
             className={cn(
-              'pointer-events-none select-none',
-              'absolute left-4 transition-all duration-[180ms] ease-out',
+              "pointer-events-none select-none",
+              "absolute left-4 transition-all duration-[180ms] ease-out",
               // 값이 있거나 focused 상태 (기본값: 위로 올라간 상태)
-              'top-[9px] text-[11px] font-medium',
+              "top-[9px] text-[11px] font-medium",
               // 빈 상태 (placeholder-shown)
-              'peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2',
-              'peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal',
+              "peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2",
+              "peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal",
               // focused 상태 — !important로 placeholder-shown 오버라이드
-              'peer-focus:!top-[9px] peer-focus:!translate-y-0',
-              'peer-focus:!text-[11px] peer-focus:!font-medium',
+              "peer-focus:!top-[9px] peer-focus:!translate-y-0",
+              "peer-focus:!text-[11px] peer-focus:!font-medium",
               error
-                ? 'text-red-400 peer-focus:!text-red-500'
-                : 'text-text-muted peer-focus:!text-brand-500',
+                ? "text-red-400 peer-focus:!text-red-500"
+                : "text-text-muted peer-focus:!text-brand-500",
             )}
           >
             {label}
@@ -112,12 +123,14 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
   },
 );
 
-FormField.displayName = 'FormField';
+FormField.displayName = "FormField";
 
 // ── Textarea FormField ──────────────────────────────────────────────────────
 
-export interface FormTextareaProps
-  extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'id' | 'placeholder'> {
+export interface FormTextareaProps extends Omit<
+  TextareaHTMLAttributes<HTMLTextAreaElement>,
+  "id" | "placeholder"
+> {
   label: string;
   error?: string;
   hint?: string;
@@ -126,8 +139,11 @@ export interface FormTextareaProps
 }
 
 export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
-  ({ label, error, hint, optional, className, id, rows = 3, ...props }, ref) => {
-    const fieldId = id ?? `field-${label.replace(/\s+/g, '-')}`;
+  (
+    { label, error, hint, optional, className, id, rows = 3, ...props },
+    ref,
+  ) => {
+    const fieldId = id ?? `field-${label.replace(/\s+/g, "-")}`;
 
     return (
       <div>
@@ -138,15 +154,14 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
             rows={rows}
             placeholder=" "
             className={cn(
-              'peer w-full resize-none rounded-xl border',
-              'bg-surface-input/50 px-4 pb-3 pt-[22px]',
-              'text-sm text-text-primary outline-none',
-              'transition-all duration-200',
-              'border-border placeholder-transparent',
-              'focus:border-brand-400 focus:bg-white',
-              'disabled:cursor-not-allowed disabled:opacity-50',
-              error &&
-                'border-red-300 bg-red-50/30 focus:border-red-400',
+              "peer w-full resize-none rounded-xl border",
+              "bg-surface-input/50 px-4 pb-3 pt-[22px]",
+              "text-sm text-text-primary outline-none",
+              "transition-all duration-200",
+              "border-border placeholder-transparent",
+              "focus:border-brand-400 focus:bg-white",
+              "disabled:cursor-not-allowed disabled:opacity-50",
+              error && "border-red-300 bg-red-50/30 focus:border-red-400",
               className,
             )}
             {...props}
@@ -154,17 +169,17 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
           <label
             htmlFor={fieldId}
             className={cn(
-              'pointer-events-none select-none',
-              'absolute left-4 transition-all duration-[180ms] ease-out',
+              "pointer-events-none select-none",
+              "absolute left-4 transition-all duration-[180ms] ease-out",
               // 값이 있거나 focused 상태
-              'top-[9px] text-[11px] font-medium',
+              "top-[9px] text-[11px] font-medium",
               // 빈 상태
-              'peer-placeholder-shown:top-[14px] peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal',
+              "peer-placeholder-shown:top-[14px] peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal",
               // focused 상태
-              'peer-focus:!top-[9px] peer-focus:!text-[11px] peer-focus:!font-medium',
+              "peer-focus:!top-[9px] peer-focus:!text-[11px] peer-focus:!font-medium",
               error
-                ? 'text-red-400 peer-focus:!text-red-500'
-                : 'text-text-muted peer-focus:!text-brand-500',
+                ? "text-red-400 peer-focus:!text-red-500"
+                : "text-text-muted peer-focus:!text-brand-500",
             )}
           >
             {label}
@@ -188,4 +203,4 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
   },
 );
 
-FormTextarea.displayName = 'FormTextarea';
+FormTextarea.displayName = "FormTextarea";

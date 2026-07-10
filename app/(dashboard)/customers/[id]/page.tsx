@@ -8,12 +8,12 @@ import { usersApi, getErrorMessage } from '@/lib/api';
 import { useAuth } from '@/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { PetProfileCard } from '@/components/shared/PetProfileCard';
 import {
   USER_STATUS_MAP,
   SUBSCRIPTION_STATUS_MAP,
   PAYMENT_STATUS_MAP,
   formatDateTime,
-  formatDate,
   formatCurrency,
   cn,
 } from '@/lib/utils';
@@ -64,7 +64,7 @@ export default function CustomerDetailPage() {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-200 border-t-brand-500" />
+        <div className="spinner" />
       </div>
     );
   }
@@ -81,19 +81,19 @@ export default function CustomerDetailPage() {
         <ArrowLeft size={16} /> 목록으로
       </button>
 
-      {/* Header */}
-      <div className="card p-5">
+      {/* Hero */}
+      <div className="detail-hero shadow-card">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-mono text-sm text-text-muted">#{user.id}</p>
               {statusInfo && <Badge label={statusInfo.label} color={statusInfo.color} />}
               {isInfluencer && (
-                <Badge label="인플루언서" color="bg-purple-100 text-purple-700" />
+                <Badge label="인플루언서" color="bg-violet-50 text-violet-600" />
               )}
             </div>
-            <h1 className="mt-1 break-all text-xl font-bold text-text-primary">{user.email}</h1>
-            {user.phone && <p className="text-text-muted">{user.phone}</p>}
+            <h1 className="mt-1.5 break-all text-xl font-bold text-text-primary">{user.email}</h1>
+            {user.phone && <p className="mt-0.5 text-sm text-text-muted">{user.phone}</p>}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {isAdmin && isInfluencer && (
@@ -110,10 +110,10 @@ export default function CustomerDetailPage() {
                 onClick={() => influencerMutation.mutate(!isInfluencer)}
                 disabled={influencerMutation.isPending}
                 className={cn(
-                  'flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition-all',
+                  'flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all',
                   isInfluencer
-                    ? 'border-purple-200 bg-purple-50 text-purple-600 hover:bg-purple-100'
-                    : 'border-border text-text-secondary hover:border-brand-200 hover:bg-brand-50',
+                    ? 'bg-purple-100/80 text-purple-600 hover:bg-purple-100'
+                    : 'bg-white/70 text-text-secondary backdrop-blur-sm hover:bg-brand-50 hover:text-brand-600',
                 )}
               >
                 <TrendingUp size={14} />
@@ -135,149 +135,144 @@ export default function CustomerDetailPage() {
         {influencerError && (
           <p className="mt-2 text-xs text-red-500">{influencerError}</p>
         )}
-        <div className="mt-4 grid grid-cols-1 gap-3 border-t border-border pt-4 text-sm sm:grid-cols-3">
-          <div>
-            <p className="text-text-muted">가입일</p>
-            <p className="font-medium text-text-primary">{formatDateTime(user.createdAt)}</p>
+        <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div className="rounded-xl bg-white/60 px-4 py-3 backdrop-blur-sm">
+            <p className="text-xs text-text-muted">가입일</p>
+            <p className="mt-0.5 text-sm font-semibold text-text-primary">{formatDateTime(user.createdAt)}</p>
           </div>
-          <div>
-            <p className="text-text-muted">마지막 로그인</p>
-            <p className="font-medium text-text-primary">{formatDateTime(user.lastLoginAt)}</p>
+          <div className="rounded-xl bg-white/60 px-4 py-3 backdrop-blur-sm">
+            <p className="text-xs text-text-muted">마지막 로그인</p>
+            <p className="mt-0.5 text-sm font-semibold text-text-primary">{formatDateTime(user.lastLoginAt)}</p>
           </div>
-          <div>
-            <p className="text-text-muted">마케팅 동의</p>
-            <p className={cn('font-medium', user.isAllowMarketing ? 'text-green-600' : 'text-text-muted')}>
+          <div className="rounded-xl bg-white/60 px-4 py-3 backdrop-blur-sm">
+            <p className="text-xs text-text-muted">마케팅 동의</p>
+            <p className={cn('mt-0.5 text-sm font-semibold', user.isAllowMarketing ? 'text-green-600' : 'text-text-muted')}>
               {user.isAllowMarketing ? '동의' : '미동의'}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {/* 반려견 프로필 */}
-        {(data?.petProfiles ?? []).length > 0 && (
-          <div className="card p-5">
-            <div className="mb-3 flex items-center gap-2">
-              <Dog size={16} className="text-brand-500" />
-              <h2 className="section-title">반려견 ({data.petProfiles.length})</h2>
-            </div>
-            <div className="space-y-3">
-              {data.petProfiles.map((pet: any) => (
-                <div key={pet.id} className="space-y-2 rounded-xl border border-border p-3 text-sm">
-                  <div>
-                    <p className="font-semibold text-text-primary">{pet.name ?? '이름 없음'}</p>
-                    <p className="text-text-muted">{pet.breed ?? '-'} · {pet.gender === 'male' ? '수컷' : pet.gender === 'female' ? '암컷' : '-'} · {pet.weight ? `${pet.weight}kg` : '-'}</p>
-                    {pet.birthDate && <p className="text-xs text-text-muted">생일: {formatDate(pet.birthDate)}</p>}
+      {/* 상세 정보: 하나의 카드 안에 개방형 섹션으로 통합 */}
+      <div className="card p-6">
+        <div className="detail-sections">
+          {/* 반려견 프로필 (체크리스트 포함) */}
+          {(data?.petProfiles ?? []).length > 0 && (
+            <section className="detail-section">
+              <div className="detail-section-label">
+                <Dog size={13} className="text-brand-400" />
+                반려견
+                <span className="rounded-full bg-brand-50 px-1.5 py-0.5 text-[11px] font-bold text-brand-600">
+                  {data.petProfiles.length}
+                </span>
+              </div>
+              <div className="divide-y divide-border-light">
+                {data.petProfiles.map((pet: any) => (
+                  <div key={pet.id} className="py-4 first:pt-0 last:pb-0">
+                    <PetProfileCard petProfile={pet} hideLabel />
                   </div>
-                  <div className="rounded-lg bg-amber-50 px-2.5 py-2">
-                    <p className="mb-0.5 text-xs font-semibold text-amber-700">특이사항</p>
-                    {pet.specialNotes ? (
-                      <p className="whitespace-pre-wrap text-xs leading-relaxed text-amber-900">{pet.specialNotes}</p>
-                    ) : (
-                      <p className="text-xs text-amber-600/60">없음</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+                ))}
+              </div>
+            </section>
+          )}
 
-        {/* 배송지 */}
-        {(data?.deliveryAddresses ?? []).length > 0 && (
-          <div className="card p-5">
-            <div className="mb-3 flex items-center gap-2">
-              <MapPin size={16} className="text-brand-500" />
-              <h2 className="section-title">배송지 ({data.deliveryAddresses.length})</h2>
-            </div>
-            <div className="space-y-3">
-              {data.deliveryAddresses.map((addr: any) => (
-                <div key={addr.id} className="rounded-xl border border-border p-3 text-sm">
-                  <p className="font-semibold text-text-primary">
-                    {addr.receiverName}
-                    {addr.nickname && <span className="ml-2 text-xs text-text-muted">({addr.nickname})</span>}
-                  </p>
-                  <p className="text-text-secondary">{addr.phoneNumber}</p>
-                  <p className="text-text-muted text-xs">[{addr.zipCode}] {addr.address} {addr.addressDetail ?? ''}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 구독 현황 */}
-      {(data?.subscriptions ?? []).length > 0 && (
-        <div className="card p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <CreditCard size={16} className="text-brand-500" />
-            <h2 className="section-title">구독 현황</h2>
-          </div>
-          <div className="space-y-2">
-            {data.subscriptions.map((sub: any) => {
-              const subStatus = SUBSCRIPTION_STATUS_MAP[sub.status];
-              return (
-                <div key={sub.id} className="flex items-center justify-between rounded-xl border border-border px-4 py-3">
-                  <div>
-                    <p className="font-medium text-text-primary">{sub.plan?.name ?? '-'}</p>
-                    <p className="text-xs text-text-muted">
-                      다음 결제일: {sub.nextBillingDate}
-                      {sub.isPaused && (
-                        <span className="ml-1.5 font-medium text-blue-500">(건너뜀)</span>
-                      )}
+          {/* 배송지 */}
+          {(data?.deliveryAddresses ?? []).length > 0 && (
+            <section className="detail-section">
+              <div className="detail-section-label">
+                <MapPin size={13} className="text-brand-400" />
+                배송지
+                <span className="rounded-full bg-brand-50 px-1.5 py-0.5 text-[11px] font-bold text-brand-600">
+                  {data.deliveryAddresses.length}
+                </span>
+              </div>
+              <div className="divide-y divide-border-light">
+                {data.deliveryAddresses.map((addr: any) => (
+                  <div key={addr.id} className="py-3 text-sm first:pt-0 last:pb-0">
+                    <p className="font-semibold text-text-primary">
+                      {addr.receiverName}
+                      {addr.nickname && <span className="ml-2 text-xs font-normal text-text-muted">({addr.nickname})</span>}
                     </p>
+                    <p className="text-text-secondary">{addr.phoneNumber}</p>
+                    <p className="text-xs text-text-muted">[{addr.zipCode}] {addr.address} {addr.addressDetail ?? ''}</p>
                   </div>
-                  <div className="flex flex-wrap justify-end gap-1">
-                    {sub.isPaused
-                      ? <Badge label="쉬어가기" color="bg-blue-100 text-blue-700" />
-                      : subStatus && <Badge label={subStatus.label} color={subStatus.color} />
-                    }
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                ))}
+              </div>
+            </section>
+          )}
 
-      {/* 결제 이력 */}
-      {(data?.payments ?? []).length > 0 && (
-        <div className="card overflow-hidden">
-          <div className="border-b border-border px-5 py-3">
-            <div className="flex items-center gap-2">
-              <Package size={16} className="text-brand-500" />
-              <h2 className="section-title">결제 이력</h2>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="border-b border-border bg-surface-muted">
-                <tr>
-                  <th className="table-th">ID</th>
-                  <th className="table-th">플랜</th>
-                  <th className="table-th">금액</th>
-                  <th className="table-th">상태</th>
-                  <th className="table-th">결제일시</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {data.payments.slice(0, 10).map((payment: any) => {
-                  const ps = PAYMENT_STATUS_MAP[payment.status];
+          {/* 구독 현황 */}
+          {(data?.subscriptions ?? []).length > 0 && (
+            <section className="detail-section">
+              <div className="detail-section-label">
+                <CreditCard size={13} className="text-brand-400" />
+                구독 현황
+              </div>
+              <div className="divide-y divide-border-light">
+                {data.subscriptions.map((sub: any) => {
+                  const subStatus = SUBSCRIPTION_STATUS_MAP[sub.status];
                   return (
-                    <tr key={payment.id}>
-                      <td className="table-td font-mono text-xs text-text-muted">#{payment.id}</td>
-                      <td className="table-td text-text-primary">{payment.planName ?? '-'}</td>
-                      <td className="table-td font-semibold text-text-primary">{formatCurrency(payment.amount)}</td>
-                      <td className="table-td">{ps && <Badge label={ps.label} color={ps.color} />}</td>
-                      <td className="table-td text-text-secondary">{formatDateTime(payment.approvedAt)}</td>
-                    </tr>
+                    <div key={sub.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                      <div>
+                        <p className="text-sm font-medium text-text-primary">{sub.plan?.name ?? '-'}</p>
+                        <p className="text-xs text-text-muted">
+                          다음 결제일: {sub.nextBillingDate}
+                          {sub.isPaused && (
+                            <span className="ml-1.5 font-medium text-blue-500">(건너뜀)</span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap justify-end gap-1">
+                        {sub.isPaused
+                          ? <Badge label="쉬어가기" color="bg-blue-50 text-blue-600" />
+                          : subStatus && <Badge label={subStatus.label} color={subStatus.color} />
+                        }
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </section>
+          )}
+
+          {/* 결제 이력 */}
+          {(data?.payments ?? []).length > 0 && (
+            <section className="detail-section">
+              <div className="detail-section-label">
+                <Package size={13} className="text-brand-400" />
+                결제 이력
+              </div>
+              <div className="-mx-6 overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border-light">
+                      <th className="table-th first:pl-6">ID</th>
+                      <th className="table-th">플랜</th>
+                      <th className="table-th">금액</th>
+                      <th className="table-th">상태</th>
+                      <th className="table-th last:pr-6">결제일시</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-light">
+                    {data.payments.slice(0, 10).map((payment: any) => {
+                      const ps = PAYMENT_STATUS_MAP[payment.status];
+                      return (
+                        <tr key={payment.id} className="transition-colors hover:bg-surface-muted">
+                          <td className="table-td first:pl-6 font-mono text-xs text-text-muted">#{payment.id}</td>
+                          <td className="table-td text-text-primary">{payment.planName ?? '-'}</td>
+                          <td className="table-td font-semibold text-text-primary">{formatCurrency(payment.amount)}</td>
+                          <td className="table-td">{ps && <Badge label={ps.label} color={ps.color} />}</td>
+                          <td className="table-td last:pr-6 text-text-secondary">{formatDateTime(payment.approvedAt)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Status Modal */}
       <Modal isOpen={showStatusModal} onClose={() => setShowStatusModal(false)} title="고객 상태 변경" size="sm">
@@ -288,10 +283,10 @@ export default function CustomerDetailPage() {
                 key={opt.value}
                 onClick={() => setNewStatus(opt.value)}
                 className={cn(
-                  'rounded-xl border px-3 py-2 text-sm font-medium transition-all',
+                  'rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
                   newStatus === opt.value
-                    ? 'border-brand-400 bg-brand-50 text-brand-600'
-                    : 'border-border text-text-secondary hover:border-brand-200',
+                    ? 'bg-brand-500 text-white shadow-sm'
+                    : 'bg-surface-input/50 text-text-secondary hover:bg-surface-input',
                 )}
               >
                 {opt.label}

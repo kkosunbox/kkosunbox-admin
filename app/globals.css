@@ -4,8 +4,9 @@
 
 @layer base {
   html {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-      'Noto Sans KR', sans-serif;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, "Noto Sans KR", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -76,7 +77,7 @@
   }
 
   .form-label-optional::after {
-    content: '선택';
+    content: "선택";
     @apply ml-1.5 text-xs font-normal text-text-muted;
   }
 
@@ -106,5 +107,44 @@
   /* ── 검색 래퍼 ───────────────────────────────────── */
   .search-wrapper {
     @apply flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 transition-colors focus-within:border-brand-300;
+  }
+
+  /* ── 상세 화면 ───────────────────────────────────── */
+  /* 히어로 헤더: 그라데이션 배경으로 핵심 정보 강조 */
+  .detail-hero {
+    @apply relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-50 via-surface-muted to-white p-5;
+  }
+
+  /* 섹션 라벨: 아이콘 + 작은 라벨 (박스 대신 개방형 섹션 구분) */
+  .detail-section-label {
+    @apply flex items-center gap-1.5 text-xs font-bold tracking-wide text-text-muted;
+  }
+
+  /* 개방형 섹션 컨테이너: 얇은 구분선으로 섹션 분리 */
+  .detail-sections {
+    @apply divide-y divide-border-light;
+  }
+
+  .detail-section {
+    @apply space-y-3 py-5 first:pt-2 last:pb-1;
+  }
+
+  /* 키-값 행 */
+  .detail-row {
+    @apply flex items-baseline justify-between gap-3 text-sm;
+  }
+
+  /* 상태 콜아웃: 테두리 없는 틴트 배경 + 원형 아이콘 배지 */
+  .detail-callout {
+    @apply flex items-center gap-3 rounded-2xl px-4 py-3;
+  }
+
+  .detail-callout-icon {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white shadow-sm;
+  }
+
+  /* 스탯 타일: 테두리 대신 은은한 배경 */
+  .detail-stat {
+    @apply rounded-2xl bg-surface-muted px-4 py-3;
   }
 }

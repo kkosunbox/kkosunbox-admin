@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { Header } from '@/components/layout/Header';
-import { useAuth } from '@/providers/AuthProvider';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { Header } from "@/components/layout/Header";
+import { useAuth } from "@/providers/AuthProvider";
 
 export default function DashboardLayout({
   children,
@@ -17,7 +17,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!isLoading && !admin) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [admin, isLoading, router]);
 

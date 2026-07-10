@@ -202,7 +202,7 @@ export default function PlansPage() {
 
         {plansLoading ? (
           <div className="flex h-64 items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-200 border-t-brand-500" />
+            <div className="spinner" />
           </div>
         ) : plans.length === 0 ? (
           <div className="card p-8">
@@ -290,7 +290,7 @@ export default function PlansPage() {
         <div className="card overflow-hidden">
           {tagsLoading ? (
             <div className="flex h-32 items-center justify-center">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-200 border-t-brand-500" />
+              <div className="spinner h-6 w-6" />
             </div>
           ) : tags.length === 0 ? (
             <div className="p-8">

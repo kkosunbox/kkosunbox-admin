@@ -140,7 +140,7 @@ export default function CouponsPage() {
                     <td className="table-td">
                       <Badge
                         label={coupon.isActive ? '활성' : '비활성'}
-                        color={coupon.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}
+                        color={coupon.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-surface-input text-text-muted'}
                       />
                     </td>
                     <td className="table-td text-xs text-text-secondary">

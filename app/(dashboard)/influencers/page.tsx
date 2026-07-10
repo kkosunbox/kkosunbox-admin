@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import { TrendingUp, AlertCircle } from 'lucide-react';
-import { influencersApi } from '@/lib/api';
-import { Badge } from '@/components/ui/Badge';
-import { Pagination } from '@/components/ui/Pagination';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { USER_STATUS_MAP, formatDateTime, cn } from '@/lib/utils';
-import type { Influencer } from '@/types';
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { TrendingUp, AlertCircle } from "lucide-react";
+import { influencersApi } from "@/lib/api";
+import { Badge } from "@/components/ui/Badge";
+import { Pagination } from "@/components/ui/Pagination";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { USER_STATUS_MAP, formatDateTime, cn } from "@/lib/utils";
+import type { Influencer } from "@/types";
 
 const LIMIT = 20;
 
@@ -19,7 +19,7 @@ export default function InfluencersPage() {
   const [hasUnsettled, setHasUnsettled] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['influencers', page, hasUnsettled],
+    queryKey: ["influencers", page, hasUnsettled],
     queryFn: () =>
       influencersApi.getList({
         page,
@@ -39,23 +39,29 @@ export default function InfluencersPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="flex rounded-xl border border-border bg-surface-muted p-1 gap-1">
             <button
-              onClick={() => { setHasUnsettled(false); setPage(1); }}
+              onClick={() => {
+                setHasUnsettled(false);
+                setPage(1);
+              }}
               className={cn(
-                'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+                "rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
                 !hasUnsettled
-                  ? 'bg-white text-text-primary shadow-card'
-                  : 'text-text-muted hover:text-text-secondary',
+                  ? "bg-white text-text-primary shadow-card"
+                  : "text-text-muted hover:text-text-secondary",
               )}
             >
               전체
             </button>
             <button
-              onClick={() => { setHasUnsettled(true); setPage(1); }}
+              onClick={() => {
+                setHasUnsettled(true);
+                setPage(1);
+              }}
               className={cn(
-                'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+                "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
                 hasUnsettled
-                  ? 'bg-white text-text-primary shadow-card'
-                  : 'text-text-muted hover:text-text-secondary',
+                  ? "bg-white text-text-primary shadow-card"
+                  : "text-text-muted hover:text-text-secondary",
               )}
             >
               <AlertCircle size={12} />
@@ -97,16 +103,31 @@ export default function InfluencersPage() {
                   return (
                     <tr
                       key={influencer.id}
-                      onClick={() => router.push(`/influencers/${influencer.id}`)}
+                      onClick={() =>
+                        router.push(`/influencers/${influencer.id}`)
+                      }
                       className="cursor-pointer transition-colors hover:bg-surface-muted/50"
                     >
-                      <td className="table-td font-mono text-xs text-text-muted">#{influencer.id}</td>
-                      <td className="table-td font-medium text-text-primary">{influencer.email}</td>
-                      <td className="table-td text-text-secondary">{influencer.phone ?? '-'}</td>
-                      <td className="table-td">
-                        {statusInfo && <Badge label={statusInfo.label} color={statusInfo.color} />}
+                      <td className="table-td font-mono text-xs text-text-muted">
+                        #{influencer.id}
                       </td>
-                      <td className="table-td text-text-secondary">{formatDateTime(influencer.createdAt)}</td>
+                      <td className="table-td font-medium text-text-primary">
+                        {influencer.email}
+                      </td>
+                      <td className="table-td text-text-secondary">
+                        {influencer.phone ?? "-"}
+                      </td>
+                      <td className="table-td">
+                        {statusInfo && (
+                          <Badge
+                            label={statusInfo.label}
+                            color={statusInfo.color}
+                          />
+                        )}
+                      </td>
+                      <td className="table-td text-text-secondary">
+                        {formatDateTime(influencer.createdAt)}
+                      </td>
                     </tr>
                   );
                 })}
@@ -117,7 +138,11 @@ export default function InfluencersPage() {
 
         {totalPages > 1 && (
           <div className="border-t border-border px-5 py-4">
-            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
           </div>
         )}
       </div>

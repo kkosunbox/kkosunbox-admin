@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { AlertCircle, Loader2 } from 'lucide-react';
-import { useAuth } from '@/providers/AuthProvider';
-import { getErrorMessage } from '@/lib/api';
-import { FormField } from '@/components/ui/FormField';
+import { useState } from "react";
+import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { useAuth } from "@/providers/AuthProvider";
+import { getErrorMessage } from "@/lib/api";
+import { FormField } from "@/components/ui/FormField";
 
 const loginSchema = z.object({
-  username: z.string().min(1, '아이디를 입력해주세요.'),
-  password: z.string().min(1, '비밀번호를 입력해주세요.'),
+  username: z.string().min(1, "아이디를 입력해주세요."),
+  password: z.string().min(1, "비밀번호를 입력해주세요."),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const { login } = useAuth();
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
 
   const {
     register,
@@ -30,7 +30,7 @@ export default function LoginPage() {
   });
 
   async function onSubmit(data: LoginForm) {
-    setError('');
+    setError("");
     try {
       await login(data);
     } catch (err) {
@@ -44,9 +44,21 @@ export default function LoginPage() {
         {/* 로고 영역 */}
         <div className="mb-10 flex flex-col items-center">
           <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-card">
-            <Image src="/logo.png" alt="꼬순박스" width={52} height={52} className="object-contain" />
+            <Image
+              src="/logo.png"
+              alt="꼬순박스"
+              width={52}
+              height={52}
+              className="object-contain"
+            />
           </div>
-          <Image src="/logo-big.png" alt="꼬순박스" width={160} height={48} className="object-contain" />
+          <Image
+            src="/logo-big.png"
+            alt="꼬순박스"
+            width={160}
+            height={48}
+            className="object-contain"
+          />
           <p className="mt-2.5 text-sm text-text-muted">관리자 페이지</p>
         </div>
 
@@ -56,7 +68,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <FormField
-              {...register('username')}
+              {...register("username")}
               label="아이디"
               type="text"
               autoComplete="username"
@@ -64,7 +76,7 @@ export default function LoginPage() {
             />
 
             <FormField
-              {...register('password')}
+              {...register("password")}
               label="비밀번호"
               type="password"
               autoComplete="current-password"
@@ -90,7 +102,7 @@ export default function LoginPage() {
                     로그인 중...
                   </>
                 ) : (
-                  '로그인'
+                  "로그인"
                 )}
               </button>
             </div>

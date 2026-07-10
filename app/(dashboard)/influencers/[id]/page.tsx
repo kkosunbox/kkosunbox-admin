@@ -112,7 +112,7 @@ export default function InfluencerDetailPage() {
   if (summaryLoading || detailLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-200 border-t-brand-500" />
+        <div className="spinner" />
       </div>
     );
   }
@@ -191,7 +191,7 @@ export default function InfluencerDetailPage() {
               {influencerProfile && (
                 <Badge
                   label={influencerProfile.isActive ? '활성' : '비활성'}
-                  color={influencerProfile.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}
+                  color={influencerProfile.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-surface-input text-text-muted'}
                 />
               )}
             </div>
@@ -395,7 +395,7 @@ export default function InfluencerDetailPage() {
 
         {pointsLoading ? (
           <div className="flex h-48 items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-200 border-t-brand-500" />
+            <div className="spinner h-6 w-6" />
           </div>
         ) : points.length === 0 ? (
           <EmptyState icon={Coins} title="해당 월 적립 내역이 없습니다." />
@@ -417,7 +417,7 @@ export default function InfluencerDetailPage() {
                   <tr key={point.id}>
                     <td className="table-td font-mono text-xs text-text-muted">#{point.id}</td>
                     <td className="table-td">
-                      <Badge label="레퍼럴 보상" color="bg-blue-100 text-blue-700" />
+                      <Badge label="레퍼럴 보상" color="bg-blue-50 text-blue-600" />
                     </td>
                     <td className="table-td font-semibold text-brand-600">
                       +{formatCurrency(point.amount)}

@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Ticket, Loader2, AlertCircle } from 'lucide-react';
-import { couponsApi, getErrorMessage } from '@/lib/api';
-import { Modal } from '@/components/ui/Modal';
-import { FormField } from '@/components/ui/FormField';
-import { Badge } from '@/components/ui/Badge';
-import { Pagination } from '@/components/ui/Pagination';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { formatDate, cn } from '@/lib/utils';
-import type { Coupon } from '@/types';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Pencil, Ticket, Loader2, AlertCircle } from "lucide-react";
+import { couponsApi, getErrorMessage } from "@/lib/api";
+import { Modal } from "@/components/ui/Modal";
+import { FormField } from "@/components/ui/FormField";
+import { Badge } from "@/components/ui/Badge";
+import { Pagination } from "@/components/ui/Pagination";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { formatDate, cn } from "@/lib/utils";
+import type { Coupon } from "@/types";
 
 const LIMIT = 20;
 
@@ -20,13 +20,17 @@ export default function CouponsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editCoupon, setEditCoupon] = useState<Coupon | null>(null);
   const [form, setForm] = useState({
-    code: '', name: '', description: '',
-    discountRate: '', startDate: '', endDate: '',
+    code: "",
+    name: "",
+    description: "",
+    discountRate: "",
+    startDate: "",
+    endDate: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const { data, isLoading } = useQuery({
-    queryKey: ['coupons', page],
+    queryKey: ["coupons", page],
     queryFn: () => couponsApi.getList({ page, limit: LIMIT }),
   });
 
@@ -44,7 +48,10 @@ export default function CouponsPage() {
         startDate: form.startDate || undefined,
         endDate: form.endDate || undefined,
       }),
-    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['coupons'] }); closeModal(); },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["coupons"] });
+      closeModal();
+    },
     onError: (err) => setError(getErrorMessage(err)),
   });
 
@@ -57,20 +64,31 @@ export default function CouponsPage() {
         startDate: form.startDate || undefined,
         endDate: form.endDate || undefined,
       }),
-    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['coupons'] }); closeModal(); },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["coupons"] });
+      closeModal();
+    },
     onError: (err) => setError(getErrorMessage(err)),
   });
 
   const toggleMutation = useMutation({
     mutationFn: (coupon: Coupon) =>
       couponsApi.update(coupon.id, { isActive: !coupon.isActive }),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['coupons'] }),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["coupons"] }),
   });
 
   function openCreate() {
     setEditCoupon(null);
-    setForm({ code: '', name: '', description: '', discountRate: '', startDate: '', endDate: '' });
-    setError('');
+    setForm({
+      code: "",
+      name: "",
+      description: "",
+      discountRate: "",
+      startDate: "",
+      endDate: "",
+    });
+    setError("");
     setShowModal(true);
   }
 
@@ -78,21 +96,24 @@ export default function CouponsPage() {
     setEditCoupon(coupon);
     setForm({
       code: coupon.code,
-      name: coupon.name ?? '',
-      description: coupon.description ?? '',
+      name: coupon.name ?? "",
+      description: coupon.description ?? "",
       discountRate: String(coupon.discountRate),
-      startDate: coupon.startDate ? coupon.startDate.slice(0, 10) : '',
-      endDate: coupon.endDate ? coupon.endDate.slice(0, 10) : '',
+      startDate: coupon.startDate ? coupon.startDate.slice(0, 10) : "",
+      endDate: coupon.endDate ? coupon.endDate.slice(0, 10) : "",
     });
-    setError('');
+    setError("");
     setShowModal(true);
   }
 
-  function closeModal() { setShowModal(false); setEditCoupon(null); }
+  function closeModal() {
+    setShowModal(false);
+    setEditCoupon(null);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
+    setError("");
     if (editCoupon) updateMutation.mutate();
     else createMutation.mutate();
   }
@@ -109,7 +130,9 @@ export default function CouponsPage() {
 
       <div className="card overflow-hidden">
         <div className="border-b border-border px-5 py-3">
-          <p className="text-sm text-text-secondary">총 <span className="font-bold text-text-primary">{total}</span>개</p>
+          <p className="text-sm text-text-secondary">
+            총 <span className="font-bold text-text-primary">{total}</span>개
+          </p>
         </div>
 
         {isLoading ? (
@@ -117,7 +140,7 @@ export default function CouponsPage() {
             <div className="spinner" />
           </div>
         ) : coupons.length === 0 ? (
-          <EmptyState icon={Ticket} title="등록된 쿠폰이 없습니다." />
+          <EmptyState icon={Ticket} title="등록된 쿠폰이 없습니다" />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -133,33 +156,56 @@ export default function CouponsPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {coupons.map((coupon) => (
-                  <tr key={coupon.id} className={cn('transition-colors hover:bg-surface-muted/50', !coupon.isActive && 'opacity-60')}>
-                    <td className="table-td font-mono font-bold text-brand-600">{coupon.code}</td>
-                    <td className="table-td text-text-primary">{coupon.name ?? '-'}</td>
-                    <td className="table-td font-bold text-text-primary">{coupon.discountRate}%</td>
+                  <tr
+                    key={coupon.id}
+                    className={cn(
+                      "transition-colors hover:bg-surface-muted/50",
+                      !coupon.isActive && "opacity-60",
+                    )}
+                  >
+                    <td className="table-td font-mono font-bold text-brand-600">
+                      {coupon.code}
+                    </td>
+                    <td className="table-td text-text-primary">
+                      {coupon.name ?? "-"}
+                    </td>
+                    <td className="table-td font-bold text-text-primary">
+                      {coupon.discountRate}%
+                    </td>
                     <td className="table-td">
                       <Badge
-                        label={coupon.isActive ? '활성' : '비활성'}
-                        color={coupon.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-surface-input text-text-muted'}
+                        label={coupon.isActive ? "활성" : "비활성"}
+                        color={
+                          coupon.isActive
+                            ? "bg-emerald-50 text-emerald-600"
+                            : "bg-surface-input text-text-muted"
+                        }
                       />
                     </td>
                     <td className="table-td text-xs text-text-secondary">
-                      {coupon.startDate ? formatDate(coupon.startDate) : '무기한'} ~{' '}
-                      {coupon.endDate ? formatDate(coupon.endDate) : '무기한'}
+                      {coupon.startDate
+                        ? formatDate(coupon.startDate)
+                        : "무기한"}{" "}
+                      ~ {coupon.endDate ? formatDate(coupon.endDate) : "무기한"}
                     </td>
                     <td className="table-td">
                       <div className="flex gap-2">
-                        <button onClick={() => openEdit(coupon)} className="text-xs text-brand-500 hover:text-brand-600">
+                        <button
+                          onClick={() => openEdit(coupon)}
+                          className="text-xs text-brand-500 hover:text-brand-600"
+                        >
                           <Pencil size={13} />
                         </button>
                         <button
                           onClick={() => toggleMutation.mutate(coupon)}
                           className={cn(
-                            'rounded px-2 py-0.5 text-xs font-medium',
-                            coupon.isActive ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600',
+                            "rounded px-2 py-0.5 text-xs font-medium",
+                            coupon.isActive
+                              ? "bg-red-50 text-red-500"
+                              : "bg-green-50 text-green-600",
                           )}
                         >
-                          {coupon.isActive ? '비활성화' : '활성화'}
+                          {coupon.isActive ? "비활성화" : "활성화"}
                         </button>
                       </div>
                     </td>
@@ -172,12 +218,21 @@ export default function CouponsPage() {
 
         {totalPages > 1 && (
           <div className="border-t border-border px-5 py-4">
-            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
           </div>
         )}
       </div>
 
-      <Modal isOpen={showModal} onClose={closeModal} title={editCoupon ? '쿠폰 수정' : '쿠폰 추가'} size="sm">
+      <Modal
+        isOpen={showModal}
+        onClose={closeModal}
+        title={editCoupon ? "쿠폰 수정" : "쿠폰 추가"}
+        size="sm"
+      >
         <form onSubmit={handleSubmit} className="space-y-4">
           {!editCoupon && (
             <FormField
@@ -197,7 +252,9 @@ export default function CouponsPage() {
             label="할인율 (%)"
             type="number"
             value={form.discountRate}
-            onChange={(e) => setForm((f) => ({ ...f, discountRate: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, discountRate: e.target.value }))
+            }
             required
             min={1}
             max={100}
@@ -208,14 +265,18 @@ export default function CouponsPage() {
               optional
               type="date"
               value={form.startDate}
-              onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, startDate: e.target.value }))
+              }
             />
             <FormField
               label="종료일"
               optional
               type="date"
               value={form.endDate}
-              onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, endDate: e.target.value }))
+              }
             />
           </div>
           {error && (
@@ -225,9 +286,25 @@ export default function CouponsPage() {
             </div>
           )}
           <div className="flex gap-2 pt-1">
-            <button type="button" onClick={closeModal} className="btn-secondary flex-1">취소</button>
-            <button type="submit" disabled={isPending} className="btn-primary flex-1">
-              {isPending ? <><Loader2 size={14} className="animate-spin" /> 저장 중...</> : '저장'}
+            <button
+              type="button"
+              onClick={closeModal}
+              className="btn-secondary flex-1"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="btn-primary flex-1"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" /> 저장 중...
+                </>
+              ) : (
+                "저장"
+              )}
             </button>
           </div>
         </form>

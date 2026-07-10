@@ -206,30 +206,29 @@ export function CalendarView() {
         </div>
       </div>
 
-      {/* Month nav — flex 컨테이너 외부에 배치하여 달력 그리드와 상세 패널 상단 정렬 */}
-      <div className="mb-3 flex items-center justify-center gap-3">
-        <button
-          onClick={prevMonth}
-          className="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary"
-          aria-label="이전 달"
-        >
-          <ChevronLeft size={16} />
-        </button>
-        <span className="min-w-[110px] text-center text-sm font-semibold text-text-primary">
-          {year}년 {month}월
-        </span>
-        <button
-          onClick={nextMonth}
-          className="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary"
-          aria-label="다음 달"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
-
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         {/* Calendar grid */}
         <div className="min-w-0 flex-1">
+          {/* Month nav — 달력 그리드 기준 중앙 정렬 */}
+          <div className="mb-3 flex items-center justify-center gap-3">
+            <button
+              onClick={prevMonth}
+              className="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary"
+              aria-label="이전 달"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span className="min-w-[110px] text-center text-sm font-semibold text-text-primary">
+              {year}년 {month}월
+            </span>
+            <button
+              onClick={nextMonth}
+              className="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary"
+              aria-label="다음 달"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
           {isLoading ? (
             <div className="flex h-96 items-center justify-center">
               <div className="spinner" />

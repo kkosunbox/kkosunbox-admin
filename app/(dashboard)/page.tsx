@@ -26,14 +26,14 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-[1200px] space-y-6">
       {/* Welcome */}
       <div>
         <h2 className="text-lg font-bold text-text-primary">
           안녕하세요, {admin?.name}님
         </h2>
         <p className="mt-0.5 text-sm text-text-muted">
-          꼬순박스 어드민에 오신 것을 환영해요.
+          서비스 현황과 결제/배송 예정 건수를 확인해보세요.
         </p>
       </div>
 
@@ -51,7 +51,9 @@ export default function DashboardPage() {
             />
             <StatsCard
               title="이번 달 결제 금액"
-              value={isLoading ? "—" : formatCurrency(stats?.amountThisMonth ?? 0)}
+              value={
+                isLoading ? "—" : formatCurrency(stats?.amountThisMonth ?? 0)
+              }
               subtitle="완료 기준"
               icon={TrendingUp}
               iconColor="text-green-600"

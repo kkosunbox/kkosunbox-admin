@@ -28,6 +28,7 @@ const STATUS_FILTERS = [
 const DELIVERY_FILTERS = [
   { value: '', label: '전체' },
   { value: 'PendingDelivery', label: '배송 대기' },
+  { value: 'DeliveryInProgress', label: '배송중' },
   { value: 'DeliveryCompleted', label: '배송 완료' },
 ];
 

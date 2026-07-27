@@ -27,7 +27,7 @@ import type {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type EventType = "scheduled" | "paused" | "completed" | "delivered";
+type EventType = "scheduled" | "paused" | "completed" | "in_delivery" | "delivered";
 
 interface CalendarEvent {
   type: EventType;
@@ -46,7 +46,8 @@ const EVENT_CONFIG: Record<
 > = {
   scheduled: { dot: "#3B82F6", color: "#1D4ED8", label: "결제 예정" },
   paused: { dot: "#93C5FD", color: "#2563EB", label: "쉬어가기" },
-  completed: { dot: "#22C55E", color: "#15803D", label: "결제완료(미배송)" },
+  completed: { dot: "#22C55E", color: "#15803D", label: "미배송" },
+  in_delivery: { dot: "#F59E0B", color: "#B45309", label: "배송중" },
   delivered: { dot: "#C4772A", color: "#92400E", label: "배송완료" },
 };
 
@@ -123,7 +124,7 @@ export function CalendarView() {
       if (isNaN(date.getTime())) return;
       date.setHours(0, 0, 0, 0);
       result.push({
-        type: "completed",
+        type: payment.deliveryStatus === "DeliveryInProgress" ? "in_delivery" : "completed",
         title: `${payment.label} · ${(payment.amount ?? 0).toLocaleString()}원`,
         date,
         paymentId: payment.orderType === "subscription" ? payment.id : undefined,
@@ -161,9 +162,10 @@ export function CalendarView() {
 
   const TYPE_ORDER: Record<EventType, number> = {
     completed: 0,
-    scheduled: 1,
-    paused: 2,
-    delivered: 3,
+    in_delivery: 1,
+    scheduled: 2,
+    paused: 3,
+    delivered: 4,
   };
 
   // Events for selected date in panel — completed first

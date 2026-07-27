@@ -368,6 +368,7 @@ export interface CalendarCompletedPayment {
   amount: number;
   label: string;
   approvedAt: string | null;
+  deliveryStatus: 'PendingDelivery' | 'DeliveryInProgress';
 }
 
 export interface CalendarCompletedDelivery {

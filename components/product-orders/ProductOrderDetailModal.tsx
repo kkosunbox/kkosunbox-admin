@@ -108,7 +108,7 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
               </div>
             )}
 
-            {order.trackingNumber && (
+            {order.deliveryStatus === 'DeliveryCompleted' && order.trackingNumber && (
               <div className="detail-callout bg-green-50">
                 <div className="detail-callout-icon">
                   <Truck size={16} className="text-green-600" />
@@ -119,6 +119,23 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                     송장번호 {order.trackingNumber}
                   </p>
                   <p className="text-xs text-green-600">{formatDateTime(order.deliveredAt)}</p>
+                </div>
+              </div>
+            )}
+
+            {order.deliveryStatus === 'DeliveryInProgress' && order.trackingNumber && (
+              <div className="detail-callout bg-blue-50">
+                <div className="detail-callout-icon">
+                  <Truck size={16} className="text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-blue-700">배송중</p>
+                  <p className="text-sm font-semibold text-blue-800">
+                    송장번호 {order.trackingNumber}
+                  </p>
+                  <p className="text-xs text-blue-600">
+                    택배사 배송완료 확인 후 자동으로 배송완료 처리됩니다.
+                  </p>
                 </div>
               </div>
             )}

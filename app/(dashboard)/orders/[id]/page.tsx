@@ -99,7 +99,7 @@ export default function OrderDetailPage() {
       </div>
 
       {/* Tracking callout */}
-      {payment.trackingNumber && (
+      {payment.deliveryStatus === 'DeliveryCompleted' && payment.trackingNumber && (
         <div className="detail-callout bg-green-50">
           <div className="detail-callout-icon">
             <Truck size={16} className="text-green-600" />
@@ -108,6 +108,19 @@ export default function OrderDetailPage() {
             <p className="text-xs text-green-700">배송 완료</p>
             <p className="text-sm font-semibold text-green-800">송장번호 {payment.trackingNumber}</p>
             <p className="text-xs text-green-600">배송완료: {formatDateTime(payment.deliveredAt)}</p>
+          </div>
+        </div>
+      )}
+
+      {payment.deliveryStatus === 'DeliveryInProgress' && payment.trackingNumber && (
+        <div className="detail-callout bg-blue-50">
+          <div className="detail-callout-icon">
+            <Truck size={16} className="text-blue-600" />
+          </div>
+          <div>
+            <p className="text-xs text-blue-700">배송중</p>
+            <p className="text-sm font-semibold text-blue-800">송장번호 {payment.trackingNumber}</p>
+            <p className="text-xs text-blue-600">택배사 배송완료 확인 후 자동으로 배송완료 처리됩니다.</p>
           </div>
         </div>
       )}

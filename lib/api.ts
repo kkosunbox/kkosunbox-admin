@@ -99,6 +99,58 @@ export const ordersApi = {
       .then((r) => r.data.data),
 };
 
+// ─── Products (단건 판매) ───────────────────────────────────────────────────────
+
+export const productsApi = {
+  getList: () => apiClient.get('/admin/products').then((r) => r.data.data),
+
+  getById: (id: number) =>
+    apiClient.get(`/admin/products/${id}`).then((r) => r.data.data),
+
+  create: (data: {
+    name: string;
+    description?: string;
+    price: number;
+    imageUrl?: string;
+  }) => apiClient.post('/admin/products', data).then((r) => r.data.data),
+
+  update: (
+    id: number,
+    data: Partial<{
+      name: string;
+      description: string;
+      price: number;
+      imageUrl: string;
+      isActive: boolean;
+    }>,
+  ) => apiClient.patch(`/admin/products/${id}`, data).then((r) => r.data.data),
+};
+
+// ─── Product Orders (단건 판매 주문) ─────────────────────────────────────────────
+
+export const productOrdersApi = {
+  getList: (params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    deliveryStatus?: string;
+  }) =>
+    apiClient.get('/admin/product-orders', { params }).then((r) => r.data.data),
+
+  getById: (id: number) =>
+    apiClient.get(`/admin/product-orders/${id}`).then((r) => r.data.data),
+
+  updateDelivery: (id: number, trackingNumber: string) =>
+    apiClient
+      .patch(`/admin/product-orders/${id}/delivery`, { trackingNumber })
+      .then((r) => r.data.data),
+
+  cancel: (id: number, cancelReason?: string) =>
+    apiClient
+      .post(`/admin/product-orders/${id}/cancel`, { cancelReason })
+      .then((r) => r.data.data),
+};
+
 // ─── Users ────────────────────────────────────────────────────────────────────
 
 export const usersApi = {

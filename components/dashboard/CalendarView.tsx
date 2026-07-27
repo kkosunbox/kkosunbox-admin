@@ -16,7 +16,14 @@ import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "@/lib/api";
 import { PaymentDetailModal } from "@/components/orders/PaymentDetailModal";
 import { SubscriptionDetailModal } from "@/components/subscriptions/SubscriptionDetailModal";
+import { ProductOrderDetailModal } from "@/components/product-orders/ProductOrderDetailModal";
 import { formatDate } from "@/lib/utils";
+import type {
+  CalendarScheduledPayment,
+  CalendarCompletedPayment,
+  CalendarCompletedDelivery,
+  DashboardCalendarResponse,
+} from "@/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,6 +35,7 @@ interface CalendarEvent {
   date: Date;
   paymentId?: number;
   subscriptionId?: number;
+  productOrderId?: number;
 }
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -80,11 +88,14 @@ export function CalendarView() {
   const [detailSubscriptionId, setDetailSubscriptionId] = useState<
     number | null
   >(null);
+  const [detailProductOrderId, setDetailProductOrderId] = useState<
+    number | null
+  >(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error } = useQuery<DashboardCalendarResponse>({
     queryKey: ["calendar", year, month],
     queryFn: () => dashboardApi.getCalendar(year, month),
   });
@@ -93,7 +104,7 @@ export function CalendarView() {
     if (!data) return [];
     const result: CalendarEvent[] = [];
 
-    (data.scheduledPayments ?? []).forEach((sub: any) => {
+    (data.scheduledPayments ?? []).forEach((sub: CalendarScheduledPayment) => {
       if (!sub.nextBillingDate) return;
       const date = new Date(sub.nextBillingDate);
       if (isNaN(date.getTime())) return;
@@ -106,29 +117,31 @@ export function CalendarView() {
       });
     });
 
-    (data.completedPayments ?? []).forEach((payment: any) => {
+    (data.completedPayments ?? []).forEach((payment: CalendarCompletedPayment) => {
       if (!payment.approvedAt) return;
       const date = parseISO(payment.approvedAt);
       if (isNaN(date.getTime())) return;
       date.setHours(0, 0, 0, 0);
       result.push({
         type: "completed",
-        title: `${payment.planName ?? "구독"} · ${(payment.amount ?? 0).toLocaleString()}원`,
+        title: `${payment.label} · ${(payment.amount ?? 0).toLocaleString()}원`,
         date,
-        paymentId: payment.id,
+        paymentId: payment.orderType === "subscription" ? payment.id : undefined,
+        productOrderId: payment.orderType === "product" ? payment.id : undefined,
       });
     });
 
-    (data.completedDeliveries ?? []).forEach((payment: any) => {
-      if (!payment.approvedAt) return;
-      const date = parseISO(payment.approvedAt);
+    (data.completedDeliveries ?? []).forEach((delivery: CalendarCompletedDelivery) => {
+      if (!delivery.deliveredAt) return;
+      const date = parseISO(delivery.deliveredAt);
       if (isNaN(date.getTime())) return;
       date.setHours(0, 0, 0, 0);
       result.push({
         type: "delivered",
-        title: `송장번호: ${payment.trackingNumber ?? "-"}`,
+        title: `송장번호: ${delivery.trackingNumber ?? "-"}`,
         date,
-        paymentId: payment.id,
+        paymentId: delivery.orderType === "subscription" ? delivery.id : undefined,
+        productOrderId: delivery.orderType === "product" ? delivery.id : undefined,
       });
     });
 
@@ -398,7 +411,9 @@ export function CalendarView() {
                   {selectedDateEvents.map((event, idx) => {
                     const cfg = EVENT_CONFIG[event.type];
                     const clickable = !!(
-                      event.paymentId ?? event.subscriptionId
+                      event.paymentId ??
+                      event.productOrderId ??
+                      event.subscriptionId
                     );
                     return (
                       <li key={idx}>
@@ -406,6 +421,8 @@ export function CalendarView() {
                           onClick={() => {
                             if (event.paymentId)
                               setDetailPaymentId(event.paymentId);
+                            else if (event.productOrderId)
+                              setDetailProductOrderId(event.productOrderId);
                             else if (event.subscriptionId)
                               setDetailSubscriptionId(event.subscriptionId);
                           }}
@@ -449,6 +466,10 @@ export function CalendarView() {
       <SubscriptionDetailModal
         subscriptionId={detailSubscriptionId}
         onClose={() => setDetailSubscriptionId(null)}
+      />
+      <ProductOrderDetailModal
+        orderId={detailProductOrderId}
+        onClose={() => setDetailProductOrderId(null)}
       />
     </div>
   );

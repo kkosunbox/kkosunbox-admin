@@ -35,7 +35,7 @@ export type PaymentStatus =
   | 'refunded'
   | 'partially_refunded';
 
-export type DeliveryStatus = 'PendingDelivery' | 'DeliveryCompleted';
+export type DeliveryStatus = 'PendingDelivery' | 'DeliveryInProgress' | 'DeliveryCompleted';
 
 export type PaymentType = 'initial' | 'renewal' | 'upgrade';
 
@@ -141,6 +141,46 @@ export interface Payment {
   deliveredAt?: string | null;
   cancelledAt?: string | null;
   subscription?: UserSubscription;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Product (단건 판매) ─────────────────────────────────────────────────────
+
+export interface Product {
+  id: number;
+  name: string;
+  description?: string | null;
+  price: number;
+  imageUrl?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductOrder {
+  id: number;
+  userId: number;
+  user?: User;
+  productId: number;
+  product?: Product;
+  productName: string;
+  quantity: number;
+  baseAmount: number;
+  taxAmount: number;
+  amount: number;
+  deliveryAddressId: number;
+  deliveryAddress?: DeliveryAddress;
+  status: PaymentStatus;
+  paymentKey?: string | null;
+  orderId?: string | null;
+  method?: string | null;
+  approvedAt?: string | null;
+  failureReason?: string | null;
+  deliveryStatus?: DeliveryStatus | null;
+  trackingNumber?: string | null;
+  deliveredAt?: string | null;
+  cancelledAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -306,6 +346,44 @@ export interface DashboardStats {
   unansweredInquiries: number;
   totalActiveSubscriptions: number;
   totalUsers: number;
+  productPaymentsThisMonth: number;
+  productAmountThisMonth: number;
+  productPendingDelivery: number;
+}
+
+export type CalendarOrderType = 'subscription' | 'product';
+
+export interface CalendarScheduledPayment {
+  id: number;
+  nextBillingDate: string;
+  isPaused: boolean;
+  plan?: { name: string };
+  user?: { email: string };
+}
+
+export interface CalendarCompletedPayment {
+  id: number;
+  orderType: CalendarOrderType;
+  userId: number | null;
+  amount: number;
+  label: string;
+  approvedAt: string | null;
+}
+
+export interface CalendarCompletedDelivery {
+  id: number;
+  orderType: CalendarOrderType;
+  userId: number | null;
+  trackingNumber: string | null;
+  deliveredAt: string | null;
+  label: string;
+}
+
+export interface DashboardCalendarResponse {
+  scheduledPayments: CalendarScheduledPayment[];
+  completedPayments: CalendarCompletedPayment[];
+  completedPendingDeliveries: CalendarCompletedPayment[];
+  completedDeliveries: CalendarCompletedDelivery[];
 }
 
 export interface CalendarEvent {

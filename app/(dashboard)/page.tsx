@@ -44,7 +44,11 @@ export default function DashboardPage() {
             <StatsCard
               title="이번 달 결제 건수"
               value={isLoading ? "—" : (stats?.totalPaymentsThisMonth ?? 0)}
-              subtitle="완료 기준"
+              subtitle={
+                isLoading
+                  ? "완료 기준"
+                  : `완료 기준 · 단건 ${stats?.productPaymentsThisMonth ?? 0}건`
+              }
               icon={ShoppingBag}
               iconColor="text-brand-500"
               iconBg="bg-brand-50"
@@ -54,7 +58,11 @@ export default function DashboardPage() {
               value={
                 isLoading ? "—" : formatCurrency(stats?.amountThisMonth ?? 0)
               }
-              subtitle="완료 기준"
+              subtitle={
+                isLoading
+                  ? "완료 기준"
+                  : `완료 기준 · 단건 ${formatCurrency(stats?.productAmountThisMonth ?? 0)}`
+              }
               icon={TrendingUp}
               iconColor="text-green-600"
               iconBg="bg-green-50"
@@ -64,7 +72,11 @@ export default function DashboardPage() {
         <StatsCard
           title="배송 대기"
           value={isLoading ? "—" : (stats?.pendingDelivery ?? 0)}
-          subtitle="처리가 필요한 건"
+          subtitle={
+            isLoading
+              ? "처리가 필요한 건"
+              : `처리가 필요한 건 · 단건 ${stats?.productPendingDelivery ?? 0}건`
+          }
           icon={Truck}
           iconColor="text-yellow-600"
           iconBg="bg-yellow-50"

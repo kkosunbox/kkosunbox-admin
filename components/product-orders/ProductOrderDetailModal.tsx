@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { DeliveryModal } from '@/components/product-orders/DeliveryModal';
 import { CancelOrderModal } from '@/components/product-orders/CancelOrderModal';
 import { productOrdersApi } from '@/lib/api';
+import { useAuth } from '@/providers/AuthProvider';
 import {
   PAYMENT_STATUS_MAP,
   DELIVERY_STATUS_MAP,
@@ -22,6 +23,8 @@ interface ProductOrderDetailModalProps {
 }
 
 export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetailModalProps) {
+  const { admin } = useAuth();
+  const isAdmin = admin?.role === 'admin';
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
@@ -73,7 +76,7 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                 </div>
               </div>
 
-              {(canDeliver || canCancel) && (
+              {(canDeliver || (isAdmin && canCancel)) && (
                 <div className="mt-4 flex gap-2">
                   {canDeliver && (
                     <button onClick={() => setShowDeliveryModal(true)} className="btn-primary flex-1">
@@ -81,7 +84,7 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                       배송 처리하기
                     </button>
                   )}
-                  {canCancel && (
+                  {isAdmin && canCancel && (
                     <button
                       onClick={() => setShowCancelModal(true)}
                       className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-red-500 backdrop-blur-sm transition-colors hover:bg-red-50 hover:text-red-600"

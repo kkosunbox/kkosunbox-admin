@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Truck, Package, XCircle } from 'lucide-react';
 import { productOrdersApi } from '@/lib/api';
+import { useAuth } from '@/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
 import { Pagination } from '@/components/ui/Pagination';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -35,6 +36,8 @@ const DELIVERY_FILTERS = [
 const LIMIT = 20;
 
 export default function ProductOrdersPage() {
+  const { admin } = useAuth();
+  const isAdmin = admin?.role === 'admin';
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('completed');
   const [deliveryFilter, setDeliveryFilter] = useState('');
@@ -187,7 +190,7 @@ export default function ProductOrdersPage() {
                               배송처리
                             </button>
                           )}
-                          {canCancel && (
+                          {isAdmin && canCancel && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();

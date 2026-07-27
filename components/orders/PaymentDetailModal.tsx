@@ -9,6 +9,7 @@ import { DeliveryModal } from '@/components/orders/DeliveryModal';
 import { CancelPaymentModal } from '@/components/orders/CancelPaymentModal';
 import { PetProfileCard } from '@/components/shared/PetProfileCard';
 import { ordersApi } from '@/lib/api';
+import { useAuth } from '@/providers/AuthProvider';
 import {
   PAYMENT_STATUS_MAP,
   DELIVERY_STATUS_MAP,
@@ -23,6 +24,8 @@ interface PaymentDetailModalProps {
 }
 
 export function PaymentDetailModal({ paymentId, onClose }: PaymentDetailModalProps) {
+  const { admin } = useAuth();
+  const isAdmin = admin?.role === 'admin';
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
@@ -90,7 +93,7 @@ export function PaymentDetailModal({ paymentId, onClose }: PaymentDetailModalPro
               </div>
 
               {/* Actions */}
-              {(canDeliver || canCancel) && (
+              {(canDeliver || (isAdmin && canCancel)) && (
                 <div className="mt-4 flex gap-2">
                   {canDeliver && (
                     <button
@@ -101,7 +104,7 @@ export function PaymentDetailModal({ paymentId, onClose }: PaymentDetailModalPro
                       배송 처리하기
                     </button>
                   )}
-                  {canCancel && (
+                  {isAdmin && canCancel && (
                     <button
                       onClick={() => setShowCancelModal(true)}
                       className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-red-500 backdrop-blur-sm transition-colors hover:bg-red-50 hover:text-red-600"

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Truck, Package, XCircle } from 'lucide-react';
+import { Search, Truck, Package, XCircle, Undo2 } from 'lucide-react';
 import { ordersApi } from '@/lib/api';
 import { useAuth } from '@/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { DeliveryModal } from '@/components/orders/DeliveryModal';
 import { PaymentDetailModal } from '@/components/orders/PaymentDetailModal';
 import { CancelPaymentModal } from '@/components/orders/CancelPaymentModal';
+import { RefundPaymentModal } from '@/components/orders/RefundPaymentModal';
 import {
   PAYMENT_STATUS_MAP,
   DELIVERY_STATUS_MAP,
@@ -44,6 +45,7 @@ export default function OrdersPage() {
   const [search, setSearch] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [cancelPayment, setCancelPayment] = useState<Payment | null>(null);
+  const [refundPayment, setRefundPayment] = useState<Payment | null>(null);
   const [detailPaymentId, setDetailPaymentId] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -157,6 +159,7 @@ export default function OrdersPage() {
                   const canCancel =
                     payment.status === 'completed' &&
                     payment.deliveryStatus === 'PendingDelivery';
+                  const canRefund = payment.status === 'completed';
 
                   return (
                     <tr
@@ -228,6 +231,18 @@ export default function OrdersPage() {
                               결제취소
                             </button>
                           )}
+                          {isAdmin && canRefund && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setRefundPayment(payment);
+                              }}
+                              className="flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-600 transition-colors hover:bg-amber-100"
+                            >
+                              <Undo2 size={12} />
+                              환불
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -247,6 +262,7 @@ export default function OrdersPage() {
 
       <DeliveryModal payment={selectedPayment} onClose={() => setSelectedPayment(null)} />
       <CancelPaymentModal payment={cancelPayment} onClose={() => setCancelPayment(null)} />
+      <RefundPaymentModal payment={refundPayment} onClose={() => setRefundPayment(null)} />
       <PaymentDetailModal paymentId={detailPaymentId} onClose={() => setDetailPaymentId(null)} />
     </div>
   );

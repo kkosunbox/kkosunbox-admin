@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Truck, Package, MapPin, User, XCircle } from 'lucide-react';
+import { Truck, Package, MapPin, User, XCircle, Undo2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
 import { DeliveryModal } from '@/components/product-orders/DeliveryModal';
 import { CancelOrderModal } from '@/components/product-orders/CancelOrderModal';
+import { RefundOrderModal } from '@/components/product-orders/RefundOrderModal';
 import { productOrdersApi } from '@/lib/api';
 import { useAuth } from '@/providers/AuthProvider';
 import {
@@ -27,6 +28,7 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
   const isAdmin = admin?.role === 'admin';
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showRefundModal, setShowRefundModal] = useState(false);
 
   const { data: order, isLoading } = useQuery<ProductOrder>({
     queryKey: ['product-orders', orderId],
@@ -39,6 +41,7 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
   const deliveryAddress = order?.deliveryAddress;
   const canDeliver = order?.status === 'completed' && order?.deliveryStatus === 'PendingDelivery';
   const canCancel = order?.status === 'completed' && order?.deliveryStatus === 'PendingDelivery';
+  const canRefund = order?.status === 'completed';
 
   return (
     <>
@@ -76,7 +79,7 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                 </div>
               </div>
 
-              {(canDeliver || (isAdmin && canCancel)) && (
+              {(canDeliver || (isAdmin && (canCancel || canRefund))) && (
                 <div className="mt-4 flex gap-2">
                   {canDeliver && (
                     <button onClick={() => setShowDeliveryModal(true)} className="btn-primary flex-1">
@@ -91,6 +94,15 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                     >
                       <XCircle size={15} />
                       결제 취소
+                    </button>
+                  )}
+                  {isAdmin && canRefund && (
+                    <button
+                      onClick={() => setShowRefundModal(true)}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-amber-600 backdrop-blur-sm transition-colors hover:bg-amber-50 hover:text-amber-700"
+                    >
+                      <Undo2 size={15} />
+                      환불
                     </button>
                   )}
                 </div>
@@ -245,6 +257,14 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
         <CancelOrderModal
           order={showCancelModal ? order : null}
           onClose={() => setShowCancelModal(false)}
+          onSuccess={onClose}
+        />
+      )}
+
+      {order && (
+        <RefundOrderModal
+          order={showRefundModal ? order : null}
+          onClose={() => setShowRefundModal(false)}
           onSuccess={onClose}
         />
       )}

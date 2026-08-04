@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Truck, Package, XCircle } from 'lucide-react';
+import { Truck, Package, XCircle, Undo2 } from 'lucide-react';
 import { productOrdersApi } from '@/lib/api';
 import { useAuth } from '@/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
@@ -10,6 +10,7 @@ import { Pagination } from '@/components/ui/Pagination';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { DeliveryModal } from '@/components/product-orders/DeliveryModal';
 import { CancelOrderModal } from '@/components/product-orders/CancelOrderModal';
+import { RefundOrderModal } from '@/components/product-orders/RefundOrderModal';
 import { ProductOrderDetailModal } from '@/components/product-orders/ProductOrderDetailModal';
 import {
   PAYMENT_STATUS_MAP,
@@ -43,6 +44,7 @@ export default function ProductOrdersPage() {
   const [deliveryFilter, setDeliveryFilter] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<ProductOrder | null>(null);
   const [cancelOrder, setCancelOrder] = useState<ProductOrder | null>(null);
+  const [refundOrder, setRefundOrder] = useState<ProductOrder | null>(null);
   const [detailOrderId, setDetailOrderId] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -142,6 +144,7 @@ export default function ProductOrdersPage() {
                     order.status === 'completed' && order.deliveryStatus === 'PendingDelivery';
                   const canCancel =
                     order.status === 'completed' && order.deliveryStatus === 'PendingDelivery';
+                  const canRefund = order.status === 'completed';
 
                   return (
                     <tr
@@ -202,6 +205,18 @@ export default function ProductOrdersPage() {
                               결제취소
                             </button>
                           )}
+                          {isAdmin && canRefund && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setRefundOrder(order);
+                              }}
+                              className="flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-600 transition-colors hover:bg-amber-100"
+                            >
+                              <Undo2 size={12} />
+                              환불
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -221,6 +236,7 @@ export default function ProductOrdersPage() {
 
       <DeliveryModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
       <CancelOrderModal order={cancelOrder} onClose={() => setCancelOrder(null)} />
+      <RefundOrderModal order={refundOrder} onClose={() => setRefundOrder(null)} />
       <ProductOrderDetailModal orderId={detailOrderId} onClose={() => setDetailOrderId(null)} />
     </div>
   );

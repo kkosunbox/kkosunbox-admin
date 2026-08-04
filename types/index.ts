@@ -237,6 +237,20 @@ export interface Coupon {
   updatedAt: string;
 }
 
+export interface ProductCoupon {
+  id: number;
+  code: string;
+  name?: string | null;
+  description?: string | null;
+  discountRate: number;
+  maxDiscountAmount?: number | null;
+  isActive: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── System Setting ───────────────────────────────────────────────────────────
 
 export interface SystemSetting {

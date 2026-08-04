@@ -13,6 +13,7 @@ import {
   CreditCard,
   Tag,
   Ticket,
+  TicketPercent,
   Star,
   Settings,
   LogOut,
@@ -53,6 +54,12 @@ const NAV_GROUPS: { label?: string; items: NavItem[] }[] = [
       { label: "구독 플랜", href: "/plans", icon: Tag, adminOnly: true },
       { label: "상품 관리", href: "/products", icon: Package, adminOnly: true },
       { label: "쿠폰 관리", href: "/coupons", icon: Ticket, adminOnly: true },
+      {
+        label: "단건 쿠폰 관리",
+        href: "/product-coupons",
+        icon: TicketPercent,
+        adminOnly: true,
+      },
       { label: "리뷰 관리", href: "/reviews", icon: Star, adminOnly: true },
       {
         label: "인플루언서",

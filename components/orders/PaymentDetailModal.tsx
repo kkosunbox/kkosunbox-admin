@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Truck, Package, MapPin, User, XCircle } from 'lucide-react';
+import { Truck, Package, MapPin, User, XCircle, Undo2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
 import { DeliveryModal } from '@/components/orders/DeliveryModal';
 import { CancelPaymentModal } from '@/components/orders/CancelPaymentModal';
+import { RefundPaymentModal } from '@/components/orders/RefundPaymentModal';
 import { PetProfileCard } from '@/components/shared/PetProfileCard';
 import { ordersApi } from '@/lib/api';
 import { useAuth } from '@/providers/AuthProvider';
@@ -28,6 +29,7 @@ export function PaymentDetailModal({ paymentId, onClose }: PaymentDetailModalPro
   const isAdmin = admin?.role === 'admin';
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showRefundModal, setShowRefundModal] = useState(false);
 
   const { data: payment, isLoading } = useQuery<Payment>({
     queryKey: ['orders', paymentId],
@@ -45,6 +47,7 @@ export function PaymentDetailModal({ paymentId, onClose }: PaymentDetailModalPro
     payment?.status === 'completed' && payment?.deliveryStatus === 'PendingDelivery';
   const canCancel =
     payment?.status === 'completed' && payment?.deliveryStatus === 'PendingDelivery';
+  const canRefund = payment?.status === 'completed';
 
   return (
     <>
@@ -93,7 +96,7 @@ export function PaymentDetailModal({ paymentId, onClose }: PaymentDetailModalPro
               </div>
 
               {/* Actions */}
-              {(canDeliver || (isAdmin && canCancel)) && (
+              {(canDeliver || (isAdmin && (canCancel || canRefund))) && (
                 <div className="mt-4 flex gap-2">
                   {canDeliver && (
                     <button
@@ -111,6 +114,15 @@ export function PaymentDetailModal({ paymentId, onClose }: PaymentDetailModalPro
                     >
                       <XCircle size={15} />
                       결제 취소
+                    </button>
+                  )}
+                  {isAdmin && canRefund && (
+                    <button
+                      onClick={() => setShowRefundModal(true)}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-amber-600 backdrop-blur-sm transition-colors hover:bg-amber-50 hover:text-amber-700"
+                    >
+                      <Undo2 size={15} />
+                      환불
                     </button>
                   )}
                 </div>
@@ -287,6 +299,14 @@ export function PaymentDetailModal({ paymentId, onClose }: PaymentDetailModalPro
         <CancelPaymentModal
           payment={showCancelModal ? payment : null}
           onClose={() => setShowCancelModal(false)}
+          onSuccess={onClose}
+        />
+      )}
+
+      {payment && (
+        <RefundPaymentModal
+          payment={showRefundModal ? payment : null}
+          onClose={() => setShowRefundModal(false)}
           onSuccess={onClose}
         />
       )}

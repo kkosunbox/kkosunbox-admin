@@ -97,6 +97,11 @@ export const ordersApi = {
     apiClient
       .post(`/admin/orders/${id}/cancel`, { cancelSubscription })
       .then((r) => r.data.data),
+
+  refundPayment: (id: number, refundReason?: string) =>
+    apiClient
+      .post(`/admin/orders/${id}/refund`, { refundReason })
+      .then((r) => r.data.data),
 };
 
 // ─── Products (단건 판매) ───────────────────────────────────────────────────────
@@ -148,6 +153,11 @@ export const productOrdersApi = {
   cancel: (id: number, cancelReason?: string) =>
     apiClient
       .post(`/admin/product-orders/${id}/cancel`, { cancelReason })
+      .then((r) => r.data.data),
+
+  refund: (id: number, refundReason?: string) =>
+    apiClient
+      .post(`/admin/product-orders/${id}/refund`, { refundReason })
       .then((r) => r.data.data),
 };
 
@@ -293,6 +303,36 @@ export const couponsApi = {
       endDate: string;
     }>,
   ) => apiClient.patch(`/admin/coupons/${id}`, data).then((r) => r.data.data),
+};
+
+// ─── Product Coupons (단건 상품 쿠폰) ────────────────────────────────────────────
+
+export const productCouponsApi = {
+  getList: (params?: { page?: number; limit?: number }) =>
+    apiClient.get('/admin/product-coupons', { params }).then((r) => r.data.data),
+
+  create: (data: {
+    code: string;
+    name?: string;
+    description?: string;
+    discountRate: number;
+    maxDiscountAmount?: number;
+    startDate?: string;
+    endDate?: string;
+  }) => apiClient.post('/admin/product-coupons', data).then((r) => r.data.data),
+
+  update: (
+    id: number,
+    data: Partial<{
+      name: string;
+      description: string;
+      discountRate: number;
+      maxDiscountAmount: number | null;
+      isActive: boolean;
+      startDate: string;
+      endDate: string;
+    }>,
+  ) => apiClient.patch(`/admin/product-coupons/${id}`, data).then((r) => r.data.data),
 };
 
 // ─── Reviews ──────────────────────────────────────────────────────────────────

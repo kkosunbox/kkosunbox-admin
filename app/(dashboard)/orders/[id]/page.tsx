@@ -75,7 +75,7 @@ export default function OrderDetailPage() {
         <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold leading-tight text-text-primary">
-              {subscription?.plan?.name ?? payment.planName ?? '구독 박스'}
+              {payment.planName ?? subscription?.plan?.name ?? '구독 박스'}
             </h1>
             <p className="mt-0.5 break-all text-sm text-text-muted">{subscription?.user?.email}</p>
           </div>

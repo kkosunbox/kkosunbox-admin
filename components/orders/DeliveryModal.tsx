@@ -68,8 +68,8 @@ export function DeliveryModal({ payment, onClose }: DeliveryModalProps) {
           <div className="rounded-xl bg-surface-input/50 p-4 text-sm">
             <p className="text-xs font-medium text-text-muted">주문 정보</p>
             <p className="mt-1.5 font-semibold text-text-primary">
-              {payment.subscription?.plan?.name ??
-                payment.planName ??
+              {payment.planName ??
+                payment.subscription?.plan?.name ??
                 "구독 박스"}
             </p>
             <p className="text-text-secondary">

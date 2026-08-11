@@ -79,7 +79,7 @@ export function PaymentDetailModal({ paymentId, onClose }: PaymentDetailModalPro
               <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <p className="text-lg font-bold leading-tight text-text-primary">
-                    {subscription?.plan?.name ?? payment.planName ?? '구독 박스'}
+                    {payment.planName ?? subscription?.plan?.name ?? '구독 박스'}
                   </p>
                   <p className="mt-0.5 text-sm text-text-muted">
                     {subscription?.user?.email ?? '-'}

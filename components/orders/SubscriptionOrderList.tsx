@@ -181,7 +181,7 @@ export function SubscriptionOrderList() {
                       </td>
                       <td className="table-td">
                         <p className="font-medium text-text-primary">
-                          {payment.subscription?.plan?.name ?? payment.planName ?? '-'}
+                          {payment.planName ?? payment.subscription?.plan?.name ?? '-'}
                         </p>
                       </td>
                       <td className="table-td font-semibold text-text-primary">

@@ -52,7 +52,7 @@ export function CancelPaymentModal({ payment, onClose, onSuccess }: CancelPaymen
           <div className="rounded-xl bg-surface-muted p-4 text-sm">
             <p className="text-text-muted">취소 대상</p>
             <p className="mt-1 font-semibold text-text-primary">
-              {payment.subscription?.plan?.name ?? payment.planName ?? '구독 박스'}
+              {payment.planName ?? payment.subscription?.plan?.name ?? '구독 박스'}
             </p>
             <p className="text-text-secondary">
               {payment.subscription?.user?.email ?? `주문 #${payment.id}`}

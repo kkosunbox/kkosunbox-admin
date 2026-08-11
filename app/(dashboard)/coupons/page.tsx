@@ -9,24 +9,36 @@ import { FormField } from "@/components/ui/FormField";
 import { Badge } from "@/components/ui/Badge";
 import { Pagination } from "@/components/ui/Pagination";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { formatDate, cn } from "@/lib/utils";
-import type { Coupon } from "@/types";
+import { formatCurrency, formatDate, cn } from "@/lib/utils";
+import type { Coupon, CouponDiscountType } from "@/types";
 
 const LIMIT = 20;
+
+const emptyForm = {
+  code: "",
+  name: "",
+  description: "",
+  discountType: "percent" as CouponDiscountType,
+  discountRate: "",
+  discountAmount: "",
+  applyCount: "1",
+  startDate: "",
+  endDate: "",
+};
+
+function formatDiscount(coupon: Coupon) {
+  if (coupon.discountType === "fixed") {
+    return formatCurrency(coupon.discountAmount ?? 0);
+  }
+  return `${coupon.discountRate ?? 0}%`;
+}
 
 export default function CouponsPage() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [editCoupon, setEditCoupon] = useState<Coupon | null>(null);
-  const [form, setForm] = useState({
-    code: "",
-    name: "",
-    description: "",
-    discountRate: "",
-    startDate: "",
-    endDate: "",
-  });
+  const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
 
   const { data, isLoading } = useQuery({
@@ -38,15 +50,28 @@ export default function CouponsPage() {
   const total: number = data?.total ?? 0;
   const totalPages = Math.ceil(total / LIMIT);
 
+  function buildDiscountPayload() {
+    const applyCount = Number(form.applyCount);
+    const base = {
+      name: form.name || undefined,
+      description: form.description || undefined,
+      discountType: form.discountType,
+      applyCount: Number.isFinite(applyCount) && applyCount >= 1 ? applyCount : 1,
+      startDate: form.startDate || undefined,
+      endDate: form.endDate || undefined,
+    };
+
+    if (form.discountType === "fixed") {
+      return { ...base, discountAmount: Number(form.discountAmount) };
+    }
+    return { ...base, discountRate: Number(form.discountRate) };
+  }
+
   const createMutation = useMutation({
     mutationFn: () =>
       couponsApi.create({
         code: form.code,
-        name: form.name || undefined,
-        description: form.description || undefined,
-        discountRate: Number(form.discountRate),
-        startDate: form.startDate || undefined,
-        endDate: form.endDate || undefined,
+        ...buildDiscountPayload(),
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["coupons"] });
@@ -57,13 +82,7 @@ export default function CouponsPage() {
 
   const updateMutation = useMutation({
     mutationFn: () =>
-      couponsApi.update(editCoupon!.id, {
-        name: form.name || undefined,
-        description: form.description || undefined,
-        discountRate: Number(form.discountRate),
-        startDate: form.startDate || undefined,
-        endDate: form.endDate || undefined,
-      }),
+      couponsApi.update(editCoupon!.id, buildDiscountPayload()),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["coupons"] });
       closeModal();
@@ -80,14 +99,7 @@ export default function CouponsPage() {
 
   function openCreate() {
     setEditCoupon(null);
-    setForm({
-      code: "",
-      name: "",
-      description: "",
-      discountRate: "",
-      startDate: "",
-      endDate: "",
-    });
+    setForm(emptyForm);
     setError("");
     setShowModal(true);
   }
@@ -98,7 +110,12 @@ export default function CouponsPage() {
       code: coupon.code,
       name: coupon.name ?? "",
       description: coupon.description ?? "",
-      discountRate: String(coupon.discountRate),
+      discountType: coupon.discountType ?? "percent",
+      discountRate:
+        coupon.discountRate != null ? String(coupon.discountRate) : "",
+      discountAmount:
+        coupon.discountAmount != null ? String(coupon.discountAmount) : "",
+      applyCount: String(coupon.applyCount ?? 1),
       startDate: coupon.startDate ? coupon.startDate.slice(0, 10) : "",
       endDate: coupon.endDate ? coupon.endDate.slice(0, 10) : "",
     });
@@ -148,7 +165,8 @@ export default function CouponsPage() {
                 <tr>
                   <th className="table-th">코드</th>
                   <th className="table-th">이름</th>
-                  <th className="table-th">할인율</th>
+                  <th className="table-th">할인</th>
+                  <th className="table-th">적용 횟수</th>
                   <th className="table-th">상태</th>
                   <th className="table-th">유효기간</th>
                   <th className="table-th">액션</th>
@@ -170,7 +188,10 @@ export default function CouponsPage() {
                       {coupon.name ?? "-"}
                     </td>
                     <td className="table-td font-bold text-text-primary">
-                      {coupon.discountRate}%
+                      {formatDiscount(coupon)}
+                    </td>
+                    <td className="table-td text-text-primary">
+                      {coupon.applyCount ?? 1}회
                     </td>
                     <td className="table-td">
                       <Badge
@@ -248,17 +269,77 @@ export default function CouponsPage() {
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           />
+
+          <div>
+            <p className="mb-1.5 pl-1 text-xs font-medium text-text-muted">
+              할인 방식
+            </p>
+            <div className="filter-tabs w-fit">
+              <button
+                type="button"
+                className={cn(
+                  "filter-tab",
+                  form.discountType === "percent" && "filter-tab-active",
+                )}
+                onClick={() =>
+                  setForm((f) => ({ ...f, discountType: "percent" }))
+                }
+              >
+                정률 (%)
+              </button>
+              <button
+                type="button"
+                className={cn(
+                  "filter-tab",
+                  form.discountType === "fixed" && "filter-tab-active",
+                )}
+                onClick={() =>
+                  setForm((f) => ({ ...f, discountType: "fixed" }))
+                }
+              >
+                정액 (원)
+              </button>
+            </div>
+          </div>
+
+          {form.discountType === "percent" ? (
+            <FormField
+              label="할인율 (%)"
+              type="number"
+              value={form.discountRate}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, discountRate: e.target.value }))
+              }
+              required
+              min={1}
+              max={100}
+            />
+          ) : (
+            <FormField
+              label="할인 금액 (원)"
+              type="number"
+              value={form.discountAmount}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, discountAmount: e.target.value }))
+              }
+              required
+              min={1}
+              hint="결제 금액보다 크면 초과분은 버려지고 0원 결제로 처리됩니다"
+            />
+          )}
+
           <FormField
-            label="할인율 (%)"
+            label="적용 횟수"
             type="number"
-            value={form.discountRate}
+            value={form.applyCount}
             onChange={(e) =>
-              setForm((f) => ({ ...f, discountRate: e.target.value }))
+              setForm((f) => ({ ...f, applyCount: e.target.value }))
             }
             required
             min={1}
-            max={100}
+            hint="최초 결제 포함. 예: 5면 시작 1회 + 갱신 4회 할인"
           />
+
           <div className="grid grid-cols-2 gap-3">
             <FormField
               label="시작일"
@@ -279,6 +360,14 @@ export default function CouponsPage() {
               }
             />
           </div>
+
+          {editCoupon && (
+            <p className="pl-1 text-xs text-text-muted">
+              이미 이 쿠폰으로 시작된 구독에는 반영되지 않습니다. 이후 신규
+              구독에만 적용됩니다.
+            </p>
+          )}
+
           {error && (
             <div className="form-error-banner">
               <AlertCircle size={15} className="mt-0.5 shrink-0" />

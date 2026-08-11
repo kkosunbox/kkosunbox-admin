@@ -224,12 +224,17 @@ export interface Inquiry {
 
 // ─── Coupon ───────────────────────────────────────────────────────────────────
 
+export type CouponDiscountType = "percent" | "fixed";
+
 export interface Coupon {
   id: number;
   code: string;
   name?: string | null;
   description?: string | null;
-  discountRate: number;
+  discountType: CouponDiscountType;
+  discountRate?: number | null;
+  discountAmount?: number | null;
+  applyCount: number;
   isActive: boolean;
   startDate?: string | null;
   endDate?: string | null;

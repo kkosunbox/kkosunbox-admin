@@ -287,7 +287,10 @@ export const couponsApi = {
     code: string;
     name?: string;
     description?: string;
-    discountRate: number;
+    discountType?: 'percent' | 'fixed';
+    discountRate?: number;
+    discountAmount?: number;
+    applyCount?: number;
     startDate?: string;
     endDate?: string;
   }) => apiClient.post('/admin/coupons', data).then((r) => r.data.data),
@@ -297,7 +300,10 @@ export const couponsApi = {
     data: Partial<{
       name: string;
       description: string;
+      discountType: 'percent' | 'fixed';
       discountRate: number;
+      discountAmount: number;
+      applyCount: number;
       isActive: boolean;
       startDate: string;
       endDate: string;

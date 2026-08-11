@@ -15,6 +15,9 @@ import {
   DELIVERY_STATUS_MAP,
   formatCurrency,
   formatDateTime,
+  canCancelProductOrder,
+  canDeliverProductOrder,
+  canRefundProductOrder,
 } from '@/lib/utils';
 import type { ProductOrder } from '@/types';
 
@@ -39,9 +42,9 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
   const paymentStatus = order ? PAYMENT_STATUS_MAP[order.status] : null;
   const deliveryStatusInfo = order?.deliveryStatus ? DELIVERY_STATUS_MAP[order.deliveryStatus] : null;
   const deliveryAddress = order?.deliveryAddress;
-  const canDeliver = order?.status === 'completed' && order?.deliveryStatus === 'PendingDelivery';
-  const canCancel = order?.status === 'completed' && order?.deliveryStatus === 'PendingDelivery';
-  const canRefund = order?.status === 'completed';
+  const canDeliver = !!order && canDeliverProductOrder(order);
+  const canCancel = !!order && canCancelProductOrder(order);
+  const canRefund = !!order && canRefundProductOrder(order);
 
   return (
     <>
@@ -102,7 +105,7 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                       className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-amber-600 backdrop-blur-sm transition-colors hover:bg-amber-50 hover:text-amber-700"
                     >
                       <Undo2 size={15} />
-                      환불
+                      강제 환불
                     </button>
                   )}
                 </div>

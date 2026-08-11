@@ -36,9 +36,12 @@ export function getErrorMessage(error: unknown): string {
   if (error instanceof AxiosError) {
     const data = error.response?.data as Record<string, unknown> | undefined;
     if (typeof data?.message === 'string') return data.message;
+    if (error.response?.status === 400) return '요청 값이 올바르지 않습니다.';
     if (error.response?.status === 401) return '로그인이 필요합니다.';
     if (error.response?.status === 403) return '접근 권한이 없습니다.';
     if (error.response?.status === 404) return '데이터를 찾을 수 없습니다.';
+    if (error.response?.status === 409) return '이미 처리된 요청입니다.';
+    if (error.response?.status === 422) return '현재 상태에서는 처리할 수 없습니다.';
     if (error.response?.status === 500) return '서버 오류가 발생했습니다.';
   }
   return '알 수 없는 오류가 발생했습니다.';

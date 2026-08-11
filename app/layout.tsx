@@ -6,6 +6,10 @@ import { AuthProvider } from '@/providers/AuthProvider';
 export const metadata: Metadata = {
   title: '꼬순박스 관리자',
   description: '꼬순박스 사장님 & 관리자 페이지',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
   robots: {
     index: false,
     follow: false,

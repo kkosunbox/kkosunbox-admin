@@ -55,8 +55,9 @@
 |---|---|---|
 | GET | `/admin/product-orders` | 주문 목록 (필터 + 페이지네이션) |
 | GET | `/admin/product-orders/:id` | 주문 상세 |
-| PATCH | `/admin/product-orders/:id/delivery` | 배송 처리 |
-| POST | `/admin/product-orders/:id/cancel` | 결제 취소(환불) |
+| PATCH | `/admin/product-orders/:id/delivery` | 배송 처리 (송장번호 입력 → 배송중) |
+| POST | `/admin/product-orders/:id/cancel` | 결제 취소(환불) — 배송 전 |
+| POST | `/admin/product-orders/:id/refund` | 강제 환불 — 배송중/배송완료 |
 
 ### `GET /admin/product-orders` Query
 
@@ -67,22 +68,31 @@
 | status | `PaymentStatus` | - | optional |
 | deliveryStatus | `DeliveryStatus` | - | optional |
 
+`status` 미입력 시 `pending`, `failed`를 제외한 전체가 조회됨.
+
 응답: `{ items: ProductOrder[], total: number }` — page/limit은 응답에 echo되지 않으므로 프론트에서 요청값을 보관해야 함.
 
 ### `PATCH /admin/product-orders/:id/delivery`
 
 - Body: `trackingNumber: string` (필수, 최대 100자)
-- **송장번호 입력 즉시 "배송완료" 상태로 전환** (중간 "배송중" 상태 없음)
-- 결제완료(`Completed`) 건만 처리 가능
+- 처리 시 `deliveryStatus`가 `DeliveryInProgress`(배송중)로 전환됨
+- `DeliveryCompleted`(배송완료) 전환은 워커가 택배사 API로 자동 처리 — 어드민이 직접 완료 처리하지 않음
+- 결제완료(`completed`) 건만 처리 가능
 - 성공 시 고객에게 알림톡 + 텔레그램 알림 자동 발송
-- 에러: `PAYMENT_NOT_FOUND`(404), `BAD_REQUEST`(400, 결제완료 상태가 아닌 경우)
+- 에러: 404(주문 없음), 400(결제완료 상태가 아닌 경우)
 
 ### `POST /admin/product-orders/:id/cancel`
 
 - Body: `cancelReason?: string` (미입력 시 "고객 요청 취소"로 기록)
-- 취소 조건: 결제상태 `Completed` **AND** 배송상태 `PendingDelivery`(배송 시작 전) — 둘 다 만족해야 취소 가능
+- 취소 조건: 결제상태 `completed` **AND** 배송상태 `PendingDelivery`(배송 시작 전) — 둘 다 만족해야 취소 가능
 - 토스 실결제 취소(환불) API 호출까지 함께 처리됨
-- 에러: `PAYMENT_NOT_FOUND`(404), `PAYMENT_ALREADY_CANCELLED`(409), `PAYMENT_CANCELLATION_NOT_ALLOWED`(400)
+- 에러: 404(주문 없음), 409(이미 취소된 주문), 422(취소 불가 상태)
+
+### `POST /admin/product-orders/:id/refund`
+
+- Body: `refundReason?: string`
+- 배송중/배송완료 상태도 **강제 환불** 가능 (배송 전 건은 `/cancel`로 처리)
+- 에러: 404(주문 없음), 409(이미 취소된 주문), 422(환불 불가 상태)
 
 ### `ProductOrder` 응답 필드
 
@@ -112,7 +122,7 @@
 ### Enum 값
 
 - `PaymentStatus`: `pending` \| `completed` \| `failed` \| `refunded` \| `partially_refunded`
-- `DeliveryStatus`: `PendingDelivery` \| `DeliveryInProgress`(이 플로우에선 미사용) \| `DeliveryCompleted`
+- `DeliveryStatus`: `PendingDelivery` \| `DeliveryInProgress` \| `DeliveryCompleted`
 
 ---
 
@@ -164,5 +174,7 @@
   label: string,        // 구독이면 플랜명, 단건이면 상품명
 }
 ```
+
+달력에서 상세로 이동할 때는 `orderType`에 따라 `/admin/product-orders/:id`(단건)와 `/admin/orders/:id`(구독) 중 올바른 엔드포인트를 선택해야 합니다. 어드민에서는 `CalendarView`가 `orderType`으로 분기해 `ProductOrderDetailModal` / `PaymentDetailModal`을 각각 띄웁니다.
 
 > ⚠️ **참고**: `completedPendingDeliveries`는 원래부터(이번 작업 이전부터) `completedPayments`와 완전히 동일한 값을 그대로 복사한 필드입니다. 별도 필터링 로직 없이 중복 제공되고 있어 프론트에서 굳이 별도로 쓸 필요는 없어 보이며, 정리 필요 여부는 추후 판단하시면 됩니다.

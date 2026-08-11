@@ -104,6 +104,19 @@
     @apply bg-white text-text-primary shadow-sm;
   }
 
+  /* ── 페이지 탭 (목록 자체를 전환하는 상위 탭) ────── */
+  .page-tabs {
+    @apply flex items-center gap-1 border-b border-border;
+  }
+
+  .page-tab {
+    @apply relative flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium text-text-muted transition-colors hover:text-text-secondary;
+  }
+
+  .page-tab-active {
+    @apply font-semibold text-brand-600 after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-full after:bg-brand-500;
+  }
+
   /* ── 검색 래퍼 ───────────────────────────────────── */
   .search-wrapper {
     @apply flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 transition-colors focus-within:border-brand-300;

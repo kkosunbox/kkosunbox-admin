@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { format, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
+import type { ProductOrder } from "@/types";
 
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
@@ -62,6 +63,25 @@ export const DELIVERY_STATUS_MAP: Record<
     color: "bg-green-100 text-green-800",
   },
 };
+
+/* 단건 주문 액션 가능 여부 — /admin/product-orders 스펙 기준 */
+
+export function canDeliverProductOrder(order: ProductOrder): boolean {
+  return order.status === "completed" && order.deliveryStatus === "PendingDelivery";
+}
+
+export function canCancelProductOrder(order: ProductOrder): boolean {
+  return order.status === "completed" && order.deliveryStatus === "PendingDelivery";
+}
+
+/** 배송 시작 전 건은 '결제 취소'로 처리하므로 강제 환불 대상에서 제외한다. */
+export function canRefundProductOrder(order: ProductOrder): boolean {
+  return (
+    order.status === "completed" &&
+    (order.deliveryStatus === "DeliveryInProgress" ||
+      order.deliveryStatus === "DeliveryCompleted")
+  );
+}
 
 export const INQUIRY_STATUS_MAP: Record<
   string,

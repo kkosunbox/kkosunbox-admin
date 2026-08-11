@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   ShoppingBag,
-  ShoppingCart,
   Package,
   Users,
   MessageSquare,
@@ -37,7 +36,6 @@ const NAV_GROUPS: { label?: string; items: NavItem[] }[] = [
     label: "운영 관리",
     items: [
       { label: "주문 / 배송", href: "/orders", icon: ShoppingBag },
-      { label: "단건 주문", href: "/product-orders", icon: ShoppingCart },
       { label: "고객 관리", href: "/customers", icon: Users, adminOnly: true },
       {
         label: "문의 관리",

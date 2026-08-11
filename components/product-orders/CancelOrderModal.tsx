@@ -58,6 +58,10 @@ export function CancelOrderModal({ order, onClose, onSuccess }: CancelOrderModal
             <p className="mt-1 font-bold text-brand-500">{formatCurrency(order.amount)}</p>
           </div>
 
+          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+            배송 시작 전 주문만 취소할 수 있으며, 토스 결제 취소(환불)까지 함께 처리됩니다.
+          </div>
+
           <FormTextarea
             label="취소 사유"
             optional

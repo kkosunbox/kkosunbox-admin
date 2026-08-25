@@ -232,6 +232,20 @@ export const inquiriesApi = {
       .then((r) => r.data.data),
 };
 
+// ─── Partnership Inquiries ────────────────────────────────────────────────────
+
+export const partnershipInquiriesApi = {
+  getList: (params?: { page?: number; limit?: number }) =>
+    apiClient
+      .get("/admin/partnership-inquiries", { params })
+      .then((r) => r.data.data),
+
+  getById: (id: number) =>
+    apiClient
+      .get(`/admin/partnership-inquiries/${id}`)
+      .then((r) => r.data.data),
+};
+
 // ─── Plans ────────────────────────────────────────────────────────────────────
 
 export const plansApi = {

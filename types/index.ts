@@ -222,6 +222,29 @@ export interface Inquiry {
   updatedAt: string;
 }
 
+// ─── Partnership Inquiry ──────────────────────────────────────────────────────
+
+export interface PartnershipInquiryUser {
+  id: number;
+  email: string;
+  phone?: string | null;
+}
+
+export interface PartnershipInquiry {
+  id: number;
+  userId: number;
+  user?: PartnershipInquiryUser | null;
+  companyName: string;
+  contactName: string;
+  phone: string;
+  email: string;
+  referenceLinks: string[] | null;
+  content: string;
+  attachmentUrls: string[] | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── Coupon ───────────────────────────────────────────────────────────────────
 
 export type CouponDiscountType = "percent" | "fixed";

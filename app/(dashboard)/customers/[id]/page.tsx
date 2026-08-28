@@ -9,7 +9,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { PetProfileCard } from '@/components/shared/PetProfileCard';
-import { InfluencerAssignModal } from '@/components/customers/InfluencerAssignModal';
+import { InfluencerProfileModal } from '@/components/influencers/InfluencerProfileModal';
 import {
   USER_STATUS_MAP,
   SUBSCRIPTION_STATUS_MAP,
@@ -105,7 +105,7 @@ export default function CustomerDetailPage() {
                 className="flex items-center gap-1.5 btn-secondary text-sm"
               >
                 <TrendingUp size={14} />
-                포인트 정산
+                인플루언서 상세
               </button>
             )}
             {isAdmin && (
@@ -281,8 +281,9 @@ export default function CustomerDetailPage() {
         </div>
       </div>
 
-      <InfluencerAssignModal
+      <InfluencerProfileModal
         isOpen={showInfluencerModal}
+        mode="assign"
         userId={Number(id)}
         queryKeyId={id}
         initialDisplayName={influencerProfile?.displayName ?? ''}

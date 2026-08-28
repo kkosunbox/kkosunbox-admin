@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/Modal';
 import { FormField } from '@/components/ui/FormField';
 import {
   usersApi,
+  influencersApi,
   uploadInfluencerProfileImage,
   getErrorMessage,
 } from '@/lib/api';
@@ -15,8 +16,9 @@ const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ALLOWED_IMAGE_EXT = ['jpg', 'jpeg', 'png', 'webp'];
 const PUBLIC_REFERRAL_BASE = 'https://kkosunbox.com/r';
 
-interface InfluencerAssignModalProps {
+interface InfluencerProfileModalProps {
   isOpen: boolean;
+  mode: 'assign' | 'edit';
   userId: number;
   queryKeyId: string;
   initialDisplayName?: string;
@@ -25,22 +27,25 @@ interface InfluencerAssignModalProps {
   onClose: () => void;
 }
 
-export function InfluencerAssignModal({
+export function InfluencerProfileModal({
   isOpen,
+  mode,
   userId,
   queryKeyId,
   initialDisplayName = '',
   initialSlug = '',
   initialProfileImageUrl = null,
   onClose,
-}: InfluencerAssignModalProps) {
+}: InfluencerProfileModalProps) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isEdit = mode === 'edit';
 
   const [displayName, setDisplayName] = useState('');
   const [slug, setSlug] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [imageRemoved, setImageRemoved] = useState(false);
   const [error, setError] = useState('');
   const [fieldError, setFieldError] = useState<{ displayName?: string; slug?: string }>({});
 
@@ -50,6 +55,7 @@ export function InfluencerAssignModal({
     setSlug(initialSlug);
     setFile(null);
     setPreviewUrl(initialProfileImageUrl);
+    setImageRemoved(false);
     setError('');
     setFieldError({});
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -63,11 +69,21 @@ export function InfluencerAssignModal({
 
   const mutation = useMutation({
     mutationFn: async () => {
-      let profileImageUrl: string | undefined;
+      let profileImageUrl: string | null | undefined;
       if (file) {
         profileImageUrl = await uploadInfluencerProfileImage(file);
-      } else if (initialProfileImageUrl) {
+      } else if (isEdit && imageRemoved) {
+        profileImageUrl = null;
+      } else if (!isEdit && initialProfileImageUrl) {
         profileImageUrl = initialProfileImageUrl;
+      }
+
+      if (isEdit) {
+        return influencersApi.updateProfile(userId, {
+          displayName: displayName.trim(),
+          slug,
+          ...(profileImageUrl !== undefined ? { profileImageUrl } : {}),
+        });
       }
 
       return usersApi.setInfluencer(userId, {
@@ -80,6 +96,7 @@ export function InfluencerAssignModal({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['users', queryKeyId] });
       void queryClient.invalidateQueries({ queryKey: ['influencers'] });
+      void queryClient.invalidateQueries({ queryKey: ['influencer-detail', userId] });
       onClose();
     },
     onError: (err) => setError(getErrorMessage(err)),
@@ -103,6 +120,7 @@ export function InfluencerAssignModal({
       return;
     }
     setError('');
+    setImageRemoved(false);
     if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
     setFile(selected);
     setPreviewUrl(URL.createObjectURL(selected));
@@ -111,8 +129,14 @@ export function InfluencerAssignModal({
   function clearImage() {
     if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
     setFile(null);
-    setPreviewUrl(initialProfileImageUrl);
     if (fileInputRef.current) fileInputRef.current.value = '';
+
+    if (isEdit) {
+      setPreviewUrl(null);
+      setImageRemoved(true);
+      return;
+    }
+    setPreviewUrl(initialProfileImageUrl);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -131,8 +155,10 @@ export function InfluencerAssignModal({
     mutation.mutate();
   }
 
+  const showClearButton = Boolean(previewUrl) && (isEdit || Boolean(file));
+
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="인플루언서 지정">
+    <Modal isOpen={isOpen} onClose={handleClose} title={isEdit ? '프로필 수정' : '인플루언서 지정'}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <FormField
           label="표시 이름"
@@ -185,12 +211,12 @@ export function InfluencerAssignModal({
                   alt="프로필 미리보기"
                   className="h-16 w-16 rounded-2xl object-cover"
                 />
-                {file && (
+                {showClearButton && (
                   <button
                     type="button"
                     onClick={clearImage}
                     className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-text-primary text-white"
-                    aria-label="선택한 이미지 제거"
+                    aria-label="이미지 제거"
                   >
                     <X size={11} />
                   </button>
@@ -241,8 +267,10 @@ export function InfluencerAssignModal({
             {mutation.isPending ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
-                지정 중...
+                {isEdit ? '저장 중...' : '지정 중...'}
               </>
+            ) : isEdit ? (
+              '저장'
             ) : (
               '지정하기'
             )}

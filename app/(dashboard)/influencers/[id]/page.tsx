@@ -15,12 +15,14 @@ import {
   FileText,
   Link,
   Copy,
+  Pencil,
 } from 'lucide-react';
 import { influencersApi, getErrorMessage } from '@/lib/api';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { InfluencerProfileModal } from '@/components/influencers/InfluencerProfileModal';
 import { USER_STATUS_MAP, formatCurrency, formatDateTime, cn } from '@/lib/utils';
 import type { InfluencerDetail, InfluencerMonthlySummaryItem, InfluencerSettlement } from '@/types';
 
@@ -48,6 +50,7 @@ export default function InfluencerDetailPage() {
   const [cancelTarget, setCancelTarget] = useState<InfluencerSettlement | null>(null);
   const [cancelError, setCancelError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const userId = Number(id);
 
@@ -263,6 +266,15 @@ export default function InfluencerDetailPage() {
               </p>
             )}
           </div>
+
+          <button
+            type="button"
+            onClick={() => setShowEditModal(true)}
+            className="btn-secondary shrink-0 text-sm"
+          >
+            <Pencil size={14} />
+            프로필 수정
+          </button>
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-3 border-t border-border pt-4 sm:grid-cols-2">
@@ -550,6 +562,17 @@ export default function InfluencerDetailPage() {
           </div>
         </div>
       </Modal>
+
+      <InfluencerProfileModal
+        isOpen={showEditModal}
+        mode="edit"
+        userId={userId}
+        queryKeyId={String(userId)}
+        initialDisplayName={influencerProfile?.displayName ?? ''}
+        initialSlug={influencerProfile?.slug ?? ''}
+        initialProfileImageUrl={influencerProfile?.profileImageUrl ?? null}
+        onClose={() => setShowEditModal(false)}
+      />
     </div>
   );
 }

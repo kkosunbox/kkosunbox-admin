@@ -283,6 +283,18 @@ export const influencersApi = {
     apiClient
       .delete(`/admin/influencers/${userId}/settlements/${settlementId}`)
       .then((r) => r.data.data),
+
+  updateProfile: (
+    userId: number,
+    data: {
+      displayName?: string;
+      slug?: string;
+      profileImageUrl?: string | null;
+    },
+  ) =>
+    apiClient
+      .patch(`/admin/influencers/${userId}/profile`, data)
+      .then((r) => r.data.data),
 };
 
 // ─── Inquiries ────────────────────────────────────────────────────────────────

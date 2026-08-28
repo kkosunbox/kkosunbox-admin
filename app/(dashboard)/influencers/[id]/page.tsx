@@ -16,6 +16,7 @@ import {
   Link,
   Copy,
   Pencil,
+  User,
 } from 'lucide-react';
 import { influencersApi, getErrorMessage } from '@/lib/api';
 import { Badge } from '@/components/ui/Badge';
@@ -267,14 +268,24 @@ export default function InfluencerDetailPage() {
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowEditModal(true)}
-            className="btn-secondary shrink-0 text-sm"
-          >
-            <Pencil size={14} />
-            프로필 수정
-          </button>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => router.push(`/customers/${userId}`)}
+              className="btn-secondary text-sm"
+            >
+              <User size={14} />
+              고객 상세
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowEditModal(true)}
+              className="btn-secondary text-sm"
+            >
+              <Pencil size={14} />
+              프로필 수정
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-3 border-t border-border pt-4 sm:grid-cols-2">

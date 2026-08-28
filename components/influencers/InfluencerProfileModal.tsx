@@ -18,7 +18,7 @@ const PUBLIC_REFERRAL_BASE = 'https://kkosunbox.com/r';
 
 interface InfluencerProfileModalProps {
   isOpen: boolean;
-  mode: 'assign' | 'edit';
+  mode: 'assign' | 'reassign' | 'edit';
   userId: number;
   queryKeyId: string;
   initialDisplayName?: string;
@@ -40,6 +40,7 @@ export function InfluencerProfileModal({
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEdit = mode === 'edit';
+  const isReassign = mode === 'reassign';
 
   const [displayName, setDisplayName] = useState('');
   const [slug, setSlug] = useState('');
@@ -69,28 +70,50 @@ export function InfluencerProfileModal({
 
   const mutation = useMutation({
     mutationFn: async () => {
-      let profileImageUrl: string | null | undefined;
+      const trimmedName = displayName.trim();
+      let uploadedImageUrl: string | undefined;
       if (file) {
-        profileImageUrl = await uploadInfluencerProfileImage(file);
-      } else if (isEdit && imageRemoved) {
-        profileImageUrl = null;
-      } else if (!isEdit && initialProfileImageUrl) {
-        profileImageUrl = initialProfileImageUrl;
+        uploadedImageUrl = await uploadInfluencerProfileImage(file);
       }
 
       if (isEdit) {
+        let profileImageUrl: string | null | undefined;
+        if (uploadedImageUrl) profileImageUrl = uploadedImageUrl;
+        else if (imageRemoved) profileImageUrl = null;
+
         return influencersApi.updateProfile(userId, {
-          displayName: displayName.trim(),
+          displayName: trimmedName,
           slug,
           ...(profileImageUrl !== undefined ? { profileImageUrl } : {}),
         });
       }
 
+      if (isReassign) {
+        const payload: {
+          isInfluencer: true;
+          displayName?: string;
+          slug?: string;
+          profileImageUrl?: string;
+        } = { isInfluencer: true };
+
+        if (trimmedName !== initialDisplayName.trim()) {
+          payload.displayName = trimmedName;
+        }
+        if (slug !== initialSlug) {
+          payload.slug = slug;
+        }
+        if (uploadedImageUrl) {
+          payload.profileImageUrl = uploadedImageUrl;
+        }
+
+        return usersApi.setInfluencer(userId, payload);
+      }
+
       return usersApi.setInfluencer(userId, {
         isInfluencer: true,
-        displayName: displayName.trim(),
+        displayName: trimmedName,
         slug,
-        ...(profileImageUrl ? { profileImageUrl } : {}),
+        ...(uploadedImageUrl ? { profileImageUrl: uploadedImageUrl } : {}),
       });
     },
     onSuccess: () => {
@@ -137,6 +160,7 @@ export function InfluencerProfileModal({
       return;
     }
     setPreviewUrl(initialProfileImageUrl);
+    setImageRemoved(false);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -156,10 +180,19 @@ export function InfluencerProfileModal({
   }
 
   const showClearButton = Boolean(previewUrl) && (isEdit || Boolean(file));
+  const title = isEdit ? '프로필 수정' : isReassign ? '인플루언서 재지정' : '인플루언서 지정';
+  const submitLabel = isEdit ? '저장' : isReassign ? '재지정하기' : '지정하기';
+  const pendingLabel = isEdit ? '저장 중...' : isReassign ? '재지정 중...' : '지정 중...';
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title={isEdit ? '프로필 수정' : '인플루언서 지정'}>
+    <Modal isOpen={isOpen} onClose={handleClose} title={title}>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {isReassign && (
+          <p className="rounded-xl bg-surface-muted px-4 py-3 text-xs text-text-secondary">
+            기존 프로필이 있습니다. 그대로 저장하면 다시 활성화됩니다. 해제 중에도 초대 페이지
+            (<span className="font-medium">/r/{initialSlug || 'slug'}</span>)는 열리지만 비활성 상태입니다.
+          </p>
+        )}
         <FormField
           label="표시 이름"
           value={displayName}
@@ -267,12 +300,10 @@ export function InfluencerProfileModal({
             {mutation.isPending ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
-                {isEdit ? '저장 중...' : '지정 중...'}
+                {pendingLabel}
               </>
-            ) : isEdit ? (
-              '저장'
             ) : (
-              '지정하기'
+              submitLabel
             )}
           </button>
         </div>

@@ -77,6 +77,7 @@ export default function CustomerDetailPage() {
   const statusInfo = USER_STATUS_MAP[user.status];
   const isInfluencer = user.isInfluencer === true;
   const influencerProfile = data?.influencerProfile ?? user.influencerProfile ?? null;
+  const isReassign = !isInfluencer && Boolean(influencerProfile);
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
@@ -94,9 +95,18 @@ export default function CustomerDetailPage() {
               {isInfluencer && (
                 <Badge label="인플루언서" color="bg-violet-50 text-violet-600" />
               )}
+              {isReassign && (
+                <Badge label="인플루언서 해제" color="bg-surface-input text-text-muted" />
+              )}
             </div>
             <h1 className="mt-1.5 break-all text-xl font-bold text-text-primary">{user.email}</h1>
             {user.phone && <p className="mt-0.5 text-sm text-text-muted">{user.phone}</p>}
+            {isReassign && influencerProfile && (
+              <p className="mt-1 text-xs text-text-muted">
+                이전 프로필: {influencerProfile.displayName}
+                {influencerProfile.slug ? ` · ${influencerProfile.slug}` : ''}
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {isAdmin && isInfluencer && (
@@ -108,27 +118,23 @@ export default function CustomerDetailPage() {
                 인플루언서 상세
               </button>
             )}
-            {isAdmin && (
+            {isAdmin && isInfluencer && (
               <button
-                onClick={() =>
-                  isInfluencer
-                    ? unassignInfluencerMutation.mutate()
-                    : setShowInfluencerModal(true)
-                }
+                onClick={() => unassignInfluencerMutation.mutate()}
                 disabled={unassignInfluencerMutation.isPending}
-                className={cn(
-                  'flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all',
-                  isInfluencer
-                    ? 'bg-purple-100/80 text-purple-600 hover:bg-purple-100'
-                    : 'bg-white/70 text-text-secondary backdrop-blur-sm hover:bg-brand-50 hover:text-brand-600',
-                )}
+                className="flex items-center gap-1.5 rounded-full bg-purple-100/80 px-4 py-2 text-sm font-medium text-purple-600 transition-all hover:bg-purple-100"
               >
                 <TrendingUp size={14} />
-                {unassignInfluencerMutation.isPending
-                  ? '처리 중...'
-                  : isInfluencer
-                    ? '인플루언서 해제'
-                    : '인플루언서 지정'}
+                {unassignInfluencerMutation.isPending ? '처리 중...' : '인플루언서 해제'}
+              </button>
+            )}
+            {isAdmin && !isInfluencer && (
+              <button
+                onClick={() => setShowInfluencerModal(true)}
+                className="flex items-center gap-1.5 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-text-secondary backdrop-blur-sm transition-all hover:bg-brand-50 hover:text-brand-600"
+              >
+                <TrendingUp size={14} />
+                {isReassign ? '인플루언서 재지정' : '인플루언서 지정'}
               </button>
             )}
             <button
@@ -283,7 +289,7 @@ export default function CustomerDetailPage() {
 
       <InfluencerProfileModal
         isOpen={showInfluencerModal}
-        mode="assign"
+        mode={isReassign ? 'reassign' : 'assign'}
         userId={Number(id)}
         queryKeyId={id}
         initialDisplayName={influencerProfile?.displayName ?? ''}

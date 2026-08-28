@@ -9,6 +9,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { PetProfileCard } from '@/components/shared/PetProfileCard';
+import { InfluencerAssignModal } from '@/components/customers/InfluencerAssignModal';
 import {
   USER_STATUS_MAP,
   SUBSCRIPTION_STATUS_MAP,
@@ -33,6 +34,7 @@ export default function CustomerDetailPage() {
   const isAdmin = admin?.role === 'admin';
 
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showInfluencerModal, setShowInfluencerModal] = useState(false);
   const [newStatus, setNewStatus] = useState<UserStatus>('active');
   const [error, setError] = useState('');
   const [influencerError, setInfluencerError] = useState('');
@@ -51,8 +53,8 @@ export default function CustomerDetailPage() {
     onError: (err) => setError(getErrorMessage(err)),
   });
 
-  const influencerMutation = useMutation({
-    mutationFn: (isInfluencer: boolean) => usersApi.setInfluencer(Number(id), isInfluencer),
+  const unassignInfluencerMutation = useMutation({
+    mutationFn: () => usersApi.setInfluencer(Number(id), { isInfluencer: false }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['users', id] });
       void queryClient.invalidateQueries({ queryKey: ['influencers'] });
@@ -73,7 +75,8 @@ export default function CustomerDetailPage() {
   if (!user) return <div className="text-center py-16 text-text-muted">고객을 찾을 수 없습니다.</div>;
 
   const statusInfo = USER_STATUS_MAP[user.status];
-  const isInfluencer = (user as any).isInfluencer === true;
+  const isInfluencer = user.isInfluencer === true;
+  const influencerProfile = data?.influencerProfile ?? user.influencerProfile ?? null;
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
@@ -107,8 +110,12 @@ export default function CustomerDetailPage() {
             )}
             {isAdmin && (
               <button
-                onClick={() => influencerMutation.mutate(!isInfluencer)}
-                disabled={influencerMutation.isPending}
+                onClick={() =>
+                  isInfluencer
+                    ? unassignInfluencerMutation.mutate()
+                    : setShowInfluencerModal(true)
+                }
+                disabled={unassignInfluencerMutation.isPending}
                 className={cn(
                   'flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all',
                   isInfluencer
@@ -117,7 +124,7 @@ export default function CustomerDetailPage() {
                 )}
               >
                 <TrendingUp size={14} />
-                {influencerMutation.isPending
+                {unassignInfluencerMutation.isPending
                   ? '처리 중...'
                   : isInfluencer
                     ? '인플루언서 해제'
@@ -273,6 +280,16 @@ export default function CustomerDetailPage() {
           )}
         </div>
       </div>
+
+      <InfluencerAssignModal
+        isOpen={showInfluencerModal}
+        userId={Number(id)}
+        queryKeyId={id}
+        initialDisplayName={influencerProfile?.displayName ?? ''}
+        initialSlug={influencerProfile?.slug ?? ''}
+        initialProfileImageUrl={influencerProfile?.profileImageUrl ?? null}
+        onClose={() => setShowInfluencerModal(false)}
+      />
 
       {/* Status Modal */}
       <Modal isOpen={showStatusModal} onClose={() => setShowStatusModal(false)} title="고객 상태 변경" size="sm">

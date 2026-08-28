@@ -197,6 +197,9 @@ export interface User {
   isAllowTerms: boolean;
   isAllowPrivacy: boolean;
   isAllowMarketing: boolean;
+  isInfluencer?: boolean;
+  influencerContractExpiresAt?: string | null;
+  influencerProfile?: InfluencerProfile | null;
   lastLoginAt?: string | null;
   createdAt: string;
   updatedAt: string;

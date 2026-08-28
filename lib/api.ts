@@ -32,10 +32,20 @@ apiClient.interceptors.response.use(
   },
 );
 
+const ERROR_CODE_MESSAGES: Record<string, string> = {
+  ALREADY_EXISTS: '이미 사용 중인 slug입니다.',
+  INVALID_FILE_FORMAT: 'jpg, jpeg, png, webp 파일만 업로드할 수 있습니다.',
+};
+
 export function getErrorMessage(error: unknown): string {
   if (error instanceof AxiosError) {
     const data = error.response?.data as Record<string, unknown> | undefined;
-    if (typeof data?.message === 'string') return data.message;
+    const code = typeof data?.code === 'string' ? data.code : undefined;
+    if (code && ERROR_CODE_MESSAGES[code]) return ERROR_CODE_MESSAGES[code];
+    if (typeof data?.message === 'string') {
+      if (ERROR_CODE_MESSAGES[data.message]) return ERROR_CODE_MESSAGES[data.message];
+      return data.message;
+    }
     if (error.response?.status === 400) return '요청 값이 올바르지 않습니다.';
     if (error.response?.status === 401) return '로그인이 필요합니다.';
     if (error.response?.status === 403) return '접근 권한이 없습니다.';
@@ -44,6 +54,7 @@ export function getErrorMessage(error: unknown): string {
     if (error.response?.status === 422) return '현재 상태에서는 처리할 수 없습니다.';
     if (error.response?.status === 500) return '서버 오류가 발생했습니다.';
   }
+  if (error instanceof Error && error.message) return error.message;
   return '알 수 없는 오류가 발생했습니다.';
 }
 
@@ -182,11 +193,68 @@ export const usersApi = {
       .patch(`/admin/users/${id}/status`, { status })
       .then((r) => r.data.data),
 
-  setInfluencer: (id: number, isInfluencer: boolean) =>
+  setInfluencer: (
+    id: number,
+    data: {
+      isInfluencer: boolean;
+      displayName?: string;
+      slug?: string;
+      profileImageUrl?: string;
+      contractExpiresAt?: string | null;
+    },
+  ) =>
     apiClient
-      .patch(`/admin/users/${id}/influencer`, { isInfluencer })
+      .patch(`/admin/users/${id}/influencer`, data)
       .then((r) => r.data.data),
 };
+
+// ─── Assets ───────────────────────────────────────────────────────────────────
+
+export interface PresignedUrlResult {
+  uploadUrl: string;
+  fileUrl: string;
+  fileName: string;
+}
+
+const PROFILE_IMAGE_EXT_MIME: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+};
+
+export const assetsApi = {
+  getInfluencerProfileImagePresignedUrl: (data: {
+    fileName: string;
+    fileType: string;
+  }) =>
+    apiClient
+      .post('/asset/influencer-profile-image/presigned-url', data)
+      .then((r) => r.data.data as PresignedUrlResult),
+};
+
+export async function uploadInfluencerProfileImage(file: File): Promise<string> {
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+  const fileType = file.type || PROFILE_IMAGE_EXT_MIME[ext];
+  if (!fileType || !PROFILE_IMAGE_EXT_MIME[ext]) {
+    throw new Error('jpg, jpeg, png, webp 파일만 업로드할 수 있습니다.');
+  }
+
+  const { uploadUrl, fileUrl } = await assetsApi.getInfluencerProfileImagePresignedUrl({
+    fileName: file.name,
+    fileType,
+  });
+
+  const res = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': fileType },
+    body: file,
+  });
+  if (!res.ok) {
+    throw new Error('이미지 업로드에 실패했습니다.');
+  }
+  return fileUrl;
+}
 
 // ─── Influencers ──────────────────────────────────────────────────────────────
 

@@ -211,6 +211,15 @@ export default function InfluencerDetailPage() {
             {/* 레퍼럴 코드 + 링크 + 할인율 */}
             {influencerProfile && (
               <div className="mt-3 flex flex-wrap items-center gap-3">
+                {influencerProfile.slug && (
+                  <div className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-muted px-3 py-1.5">
+                    <span className="text-xs text-text-muted">slug</span>
+                    <span className="font-mono text-sm font-bold text-text-primary">
+                      {influencerProfile.slug}
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-muted px-3 py-1.5">
                   <span className="text-xs text-text-muted">레퍼럴 코드</span>
                   <span className="font-mono text-sm font-bold text-text-primary">

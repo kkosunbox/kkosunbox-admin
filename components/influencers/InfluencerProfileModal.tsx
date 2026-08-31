@@ -24,6 +24,7 @@ interface InfluencerProfileModalProps {
   initialDisplayName?: string;
   initialSlug?: string;
   initialProfileImageUrl?: string | null;
+  initialIsPageVisible?: boolean;
   onClose: () => void;
 }
 
@@ -35,6 +36,7 @@ export function InfluencerProfileModal({
   initialDisplayName = '',
   initialSlug = '',
   initialProfileImageUrl = null,
+  initialIsPageVisible = true,
   onClose,
 }: InfluencerProfileModalProps) {
   const queryClient = useQueryClient();
@@ -44,6 +46,7 @@ export function InfluencerProfileModal({
 
   const [displayName, setDisplayName] = useState('');
   const [slug, setSlug] = useState('');
+  const [isPageVisible, setIsPageVisible] = useState(true);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [imageRemoved, setImageRemoved] = useState(false);
@@ -54,13 +57,14 @@ export function InfluencerProfileModal({
     if (!isOpen) return;
     setDisplayName(initialDisplayName);
     setSlug(initialSlug);
+    setIsPageVisible(initialIsPageVisible);
     setFile(null);
     setPreviewUrl(initialProfileImageUrl);
     setImageRemoved(false);
     setError('');
     setFieldError({});
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [isOpen, initialDisplayName, initialSlug, initialProfileImageUrl]);
+  }, [isOpen, initialDisplayName, initialSlug, initialProfileImageUrl, initialIsPageVisible]);
 
   useEffect(() => {
     return () => {
@@ -84,6 +88,7 @@ export function InfluencerProfileModal({
         return influencersApi.updateProfile(userId, {
           displayName: trimmedName,
           slug,
+          isPageVisible,
           ...(profileImageUrl !== undefined ? { profileImageUrl } : {}),
         });
       }
@@ -94,6 +99,7 @@ export function InfluencerProfileModal({
           displayName?: string;
           slug?: string;
           profileImageUrl?: string;
+          isPageVisible?: boolean;
         } = { isInfluencer: true };
 
         if (trimmedName !== initialDisplayName.trim()) {
@@ -105,6 +111,9 @@ export function InfluencerProfileModal({
         if (uploadedImageUrl) {
           payload.profileImageUrl = uploadedImageUrl;
         }
+        if (isPageVisible !== initialIsPageVisible) {
+          payload.isPageVisible = isPageVisible;
+        }
 
         return usersApi.setInfluencer(userId, payload);
       }
@@ -113,6 +122,7 @@ export function InfluencerProfileModal({
         isInfluencer: true,
         displayName: trimmedName,
         slug,
+        isPageVisible,
         ...(uploadedImageUrl ? { profileImageUrl: uploadedImageUrl } : {}),
       });
     },
@@ -279,6 +289,21 @@ export function InfluencerProfileModal({
             />
           </div>
         </div>
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border p-3 transition-colors hover:bg-surface-muted/60">
+          <input
+            type="checkbox"
+            checked={isPageVisible}
+            onChange={(e) => setIsPageVisible(e.target.checked)}
+            className="mt-0.5 h-4 w-4 cursor-pointer accent-brand-500"
+          />
+          <div>
+            <p className="text-sm font-medium text-text-primary">인플루언서 페이지 공개</p>
+            <p className="text-xs text-text-muted">
+              {'체크하면 초대 페이지(/r/{slug})가 공개됩니다. 해제하면 페이지가 표시되지 않습니다.'}
+            </p>
+          </div>
+        </label>
 
         {error && (
           <div className="form-error-banner">

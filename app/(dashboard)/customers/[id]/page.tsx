@@ -295,6 +295,7 @@ export default function CustomerDetailPage() {
         initialDisplayName={influencerProfile?.displayName ?? ''}
         initialSlug={influencerProfile?.slug ?? ''}
         initialProfileImageUrl={influencerProfile?.profileImageUrl ?? null}
+        initialIsPageVisible={influencerProfile?.isPageVisible ?? true}
         onClose={() => setShowInfluencerModal(false)}
       />
 

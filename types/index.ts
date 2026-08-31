@@ -332,6 +332,7 @@ export interface InfluencerProfile {
   referralLink: string;
   discountRate: number;
   isActive: boolean;
+  isPageVisible?: boolean;
 }
 
 export interface InfluencerDetail extends User {

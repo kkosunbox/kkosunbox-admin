@@ -193,10 +193,16 @@ export default function InfluencerDetailPage() {
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-mono text-sm text-text-muted">#{userId}</p>
               {influencerProfile && (
-                <Badge
-                  label={influencerProfile.isActive ? '활성' : '비활성'}
-                  color={influencerProfile.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-surface-input text-text-muted'}
-                />
+                <>
+                  <Badge
+                    label={influencerProfile.isActive ? '활성' : '비활성'}
+                    color={influencerProfile.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-surface-input text-text-muted'}
+                  />
+                  <Badge
+                    label={(influencerProfile.isPageVisible ?? true) ? '페이지 공개' : '페이지 비공개'}
+                    color={(influencerProfile.isPageVisible ?? true) ? 'bg-blue-50 text-blue-600' : 'bg-surface-input text-text-muted'}
+                  />
+                </>
               )}
             </div>
 
@@ -582,6 +588,7 @@ export default function InfluencerDetailPage() {
         initialDisplayName={influencerProfile?.displayName ?? ''}
         initialSlug={influencerProfile?.slug ?? ''}
         initialProfileImageUrl={influencerProfile?.profileImageUrl ?? null}
+        initialIsPageVisible={influencerProfile?.isPageVisible ?? true}
         onClose={() => setShowEditModal(false)}
       />
     </div>

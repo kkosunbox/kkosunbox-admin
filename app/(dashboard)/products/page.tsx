@@ -7,6 +7,7 @@ import { productsApi, getErrorMessage } from '@/lib/api';
 import { Modal } from '@/components/ui/Modal';
 import { FormField, FormTextarea } from '@/components/ui/FormField';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SalesPauseBar } from '@/components/sales/SalesPauseBar';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
@@ -64,6 +65,12 @@ export default function ProductsPage() {
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['products'] }),
   });
 
+  const togglePauseMutation = useMutation({
+    mutationFn: (product: Product) =>
+      productsApi.update(product.id, { isSalesPaused: !product.isSalesPaused }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['products'] }),
+  });
+
   function openCreate() {
     setEditProduct(null);
     setForm({ name: '', description: '', price: '', imageUrl: '' });
@@ -99,6 +106,8 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-4">
+      <SalesPauseBar />
+
       <div className="flex items-center justify-between">
         <h2 className="section-title">단건 판매 상품</h2>
         <button onClick={openCreate} className="btn-primary">
@@ -135,27 +144,22 @@ export default function ProductsPage() {
               </div>
               <div className="p-5">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-bold text-text-primary">{product.name}</h3>
-                  <div className="flex shrink-0 gap-1">
-                    <button
-                      onClick={() => openEdit(product)}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted hover:text-text-primary"
-                    >
-                      <Pencil size={13} />
-                    </button>
-                    <button
-                      onClick={() => toggleActiveMutation.mutate(product)}
-                      disabled={toggleActiveMutation.isPending}
-                      className={cn(
-                        'rounded-lg px-2 py-0.5 text-xs font-medium transition-colors',
-                        product.isActive
-                          ? 'bg-red-50 text-red-500 hover:bg-red-100'
-                          : 'bg-green-50 text-green-600 hover:bg-green-100',
-                      )}
-                    >
-                      {product.isActive ? '비활성화' : '활성화'}
-                    </button>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-text-primary">{product.name}</h3>
+                    {product.isSalesPaused && (
+                      <span className="mt-1 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                        판매 중단
+                      </span>
+                    )}
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => openEdit(product)}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted hover:text-text-primary"
+                    aria-label="상품 수정"
+                  >
+                    <Pencil size={13} />
+                  </button>
                 </div>
                 {product.description && (
                   <p className="mt-1 line-clamp-2 text-xs text-text-muted">{product.description}</p>
@@ -163,9 +167,40 @@ export default function ProductsPage() {
                 <p className="mt-3 text-xl font-bold text-brand-500">
                   {formatCurrency(product.price)}
                 </p>
+                {product.isSalesPaused && (
+                  <p className="mt-1 text-xs text-amber-600">판매 일시중단 · 신규 구매 불가</p>
+                )}
                 {!product.isActive && (
                   <p className="mt-1 text-xs text-text-muted">비활성 · 고객 페이지에 노출되지 않음</p>
                 )}
+                <div className="mt-4 flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => togglePauseMutation.mutate(product)}
+                    disabled={togglePauseMutation.isPending}
+                    className={cn(
+                      'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
+                      product.isSalesPaused
+                        ? 'bg-green-50 text-green-600 hover:bg-green-100'
+                        : 'bg-amber-50 text-amber-700 hover:bg-amber-100',
+                    )}
+                  >
+                    {product.isSalesPaused ? '판매재개' : '판매중단'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleActiveMutation.mutate(product)}
+                    disabled={toggleActiveMutation.isPending}
+                    className={cn(
+                      'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
+                      product.isActive
+                        ? 'bg-red-50 text-red-500 hover:bg-red-100'
+                        : 'bg-green-50 text-green-600 hover:bg-green-100',
+                    )}
+                  >
+                    {product.isActive ? '비활성화' : '활성화'}
+                  </button>
+                </div>
               </div>
             </div>
           ))}

@@ -7,6 +7,7 @@ import { plansApi, planTagsApi, getErrorMessage } from '@/lib/api';
 import { Modal } from '@/components/ui/Modal';
 import { FormField, FormTextarea } from '@/components/ui/FormField';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SalesPauseBar } from '@/components/sales/SalesPauseBar';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { SubscriptionPlan, PlanTag } from '@/types';
 
@@ -96,6 +97,12 @@ export default function PlansPage() {
   const togglePlanMutation = useMutation({
     mutationFn: (plan: SubscriptionPlan) =>
       plansApi.update(plan.id, { isActive: !plan.isActive }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['plans'] }),
+  });
+
+  const togglePauseMutation = useMutation({
+    mutationFn: (plan: SubscriptionPlan) =>
+      plansApi.update(plan.id, { isSalesPaused: !plan.isSalesPaused }),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['plans'] }),
   });
 
@@ -191,6 +198,8 @@ export default function PlansPage() {
 
   return (
     <div className="space-y-8">
+      <SalesPauseBar />
+
       {/* ── 플랜 목록 ────────────────────────────────────────────── */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
@@ -212,29 +221,18 @@ export default function PlansPage() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {plans.map((plan) => (
               <div key={plan.id} className={cn('card p-5 transition-all', !plan.isActive && 'opacity-60')}>
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-2">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
                     <Tag size={18} className="text-brand-500" />
                   </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => openEditPlan(plan)}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted hover:text-text-primary"
-                    >
-                      <Pencil size={13} />
-                    </button>
-                    <button
-                      onClick={() => togglePlanMutation.mutate(plan)}
-                      className={cn(
-                        'rounded-lg px-2 py-0.5 text-xs font-medium transition-colors',
-                        plan.isActive
-                          ? 'bg-red-50 text-red-500 hover:bg-red-100'
-                          : 'bg-green-50 text-green-600 hover:bg-green-100',
-                      )}
-                    >
-                      {plan.isActive ? '비활성화' : '활성화'}
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openEditPlan(plan)}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted hover:text-text-primary"
+                    aria-label="플랜 수정"
+                  >
+                    <Pencil size={13} />
+                  </button>
                 </div>
 
                 {/* 태그 뱃지 */}
@@ -246,7 +244,14 @@ export default function PlansPage() {
                   </div>
                 )}
 
-                <h3 className="mt-3 font-bold text-text-primary">{plan.name}</h3>
+                <div className="mt-3 flex items-center gap-2">
+                  <h3 className="font-bold text-text-primary">{plan.name}</h3>
+                  {plan.isSalesPaused && (
+                    <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                      판매 중단
+                    </span>
+                  )}
+                </div>
                 {plan.description && (
                   <p className="mt-1 text-xs text-text-muted">{plan.description}</p>
                 )}
@@ -272,6 +277,37 @@ export default function PlansPage() {
                 </div>
 
                 <p className="mt-1 text-xs text-text-muted">정렬 순서: {plan.sortOrder}</p>
+                {plan.isSalesPaused && (
+                  <p className="mt-1 text-xs text-amber-600">판매 일시중단 · 신규 구독 불가</p>
+                )}
+                <div className="mt-4 flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => togglePauseMutation.mutate(plan)}
+                    disabled={togglePauseMutation.isPending}
+                    className={cn(
+                      'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
+                      plan.isSalesPaused
+                        ? 'bg-green-50 text-green-600 hover:bg-green-100'
+                        : 'bg-amber-50 text-amber-700 hover:bg-amber-100',
+                    )}
+                  >
+                    {plan.isSalesPaused ? '판매재개' : '판매중단'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => togglePlanMutation.mutate(plan)}
+                    disabled={togglePlanMutation.isPending}
+                    className={cn(
+                      'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
+                      plan.isActive
+                        ? 'bg-red-50 text-red-500 hover:bg-red-100'
+                        : 'bg-green-50 text-green-600 hover:bg-green-100',
+                    )}
+                  >
+                    {plan.isActive ? '비활성화' : '활성화'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>

@@ -1,5 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import Cookies from 'js-cookie';
+import type { PauseAllSalesResult } from '@/types';
 
 const AUTH_TOKEN_KEY = 'kkosunbox_admin_token';
 
@@ -141,6 +142,7 @@ export const productsApi = {
       price: number;
       imageUrl: string;
       isActive: boolean;
+      isSalesPaused: boolean;
     }>,
   ) => apiClient.patch(`/admin/products/${id}`, data).then((r) => r.data.data),
 };
@@ -328,6 +330,15 @@ export const partnershipInquiriesApi = {
       .then((r) => r.data.data),
 };
 
+// ─── Sales (판매 일시중단) ─────────────────────────────────────────────────────
+
+export const salesApi = {
+  pauseAll: (isSalesPaused: boolean) =>
+    apiClient
+      .post('/admin/sales/pause-all', { isSalesPaused })
+      .then((r) => r.data.data as PauseAllSalesResult),
+};
+
 // ─── Plans ────────────────────────────────────────────────────────────────────
 
 export const plansApi = {
@@ -353,6 +364,7 @@ export const plansApi = {
       discountRate: number | null;
       sortOrder: number;
       isActive: boolean;
+      isSalesPaused: boolean;
       tagIds: number[];
     }>,
   ) => apiClient.patch(`/admin/plans/${id}`, data).then((r) => r.data.data),

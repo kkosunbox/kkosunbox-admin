@@ -92,6 +92,7 @@ export interface SubscriptionPlan {
   originalPrice?: number | null;
   discountRate?: number | null;
   isActive: boolean;
+  isSalesPaused?: boolean;
   sortOrder: number;
   tags?: PlanTag[];
   createdAt: string;
@@ -154,8 +155,15 @@ export interface Product {
   price: number;
   imageUrl?: string | null;
   isActive: boolean;
+  isSalesPaused?: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PauseAllSalesResult {
+  isSalesPaused: boolean;
+  productCount: number;
+  planCount: number;
 }
 
 export interface ProductOrder {

@@ -339,6 +339,7 @@ export interface InfluencerProfile {
   referralCode: string;
   referralLink: string;
   discountRate: number;
+  rewardRate?: number | null;
   isActive: boolean;
   isPageVisible?: boolean;
 }

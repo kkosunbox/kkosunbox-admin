@@ -2,15 +2,22 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AlertCircle, ImagePlus, Loader2, X } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Modal } from '@/components/ui/Modal';
 import { FormField } from '@/components/ui/FormField';
 import {
   usersApi,
   influencersApi,
+  settingsApi,
   uploadInfluencerProfileImage,
   getErrorMessage,
 } from '@/lib/api';
+import {
+  formatRewardRatePercent,
+  getSystemReferralRewardRate,
+  percentInputToRate,
+  rateToPercentInput,
+} from '@/lib/utils';
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ALLOWED_IMAGE_EXT = ['jpg', 'jpeg', 'png', 'webp'];
@@ -25,6 +32,7 @@ interface InfluencerProfileModalProps {
   initialSlug?: string;
   initialProfileImageUrl?: string | null;
   initialIsPageVisible?: boolean;
+  initialRewardRate?: number | null;
   onClose: () => void;
 }
 
@@ -37,6 +45,7 @@ export function InfluencerProfileModal({
   initialSlug = '',
   initialProfileImageUrl = null,
   initialIsPageVisible = true,
+  initialRewardRate = null,
   onClose,
 }: InfluencerProfileModalProps) {
   const queryClient = useQueryClient();
@@ -47,24 +56,44 @@ export function InfluencerProfileModal({
   const [displayName, setDisplayName] = useState('');
   const [slug, setSlug] = useState('');
   const [isPageVisible, setIsPageVisible] = useState(true);
+  const [rewardRatePercent, setRewardRatePercent] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [imageRemoved, setImageRemoved] = useState(false);
   const [error, setError] = useState('');
-  const [fieldError, setFieldError] = useState<{ displayName?: string; slug?: string }>({});
+  const [fieldError, setFieldError] = useState<{
+    displayName?: string;
+    slug?: string;
+    rewardRate?: string;
+  }>({});
+
+  const { data: settingsData } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => settingsApi.getList(),
+    enabled: isOpen,
+  });
+  const systemRewardRate = getSystemReferralRewardRate(settingsData?.settings);
 
   useEffect(() => {
     if (!isOpen) return;
     setDisplayName(initialDisplayName);
     setSlug(initialSlug);
     setIsPageVisible(initialIsPageVisible);
+    setRewardRatePercent(rateToPercentInput(initialRewardRate));
     setFile(null);
     setPreviewUrl(initialProfileImageUrl);
     setImageRemoved(false);
     setError('');
     setFieldError({});
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [isOpen, initialDisplayName, initialSlug, initialProfileImageUrl, initialIsPageVisible]);
+  }, [
+    isOpen,
+    initialDisplayName,
+    initialSlug,
+    initialProfileImageUrl,
+    initialIsPageVisible,
+    initialRewardRate,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -80,6 +109,8 @@ export function InfluencerProfileModal({
         uploadedImageUrl = await uploadInfluencerProfileImage(file);
       }
 
+      const rewardRate = percentInputToRate(rewardRatePercent);
+
       if (isEdit) {
         let profileImageUrl: string | null | undefined;
         if (uploadedImageUrl) profileImageUrl = uploadedImageUrl;
@@ -89,6 +120,7 @@ export function InfluencerProfileModal({
           displayName: trimmedName,
           slug,
           isPageVisible,
+          rewardRate,
           ...(profileImageUrl !== undefined ? { profileImageUrl } : {}),
         });
       }
@@ -100,6 +132,7 @@ export function InfluencerProfileModal({
           slug?: string;
           profileImageUrl?: string;
           isPageVisible?: boolean;
+          rewardRate?: number | null;
         } = { isInfluencer: true };
 
         if (trimmedName !== initialDisplayName.trim()) {
@@ -114,6 +147,9 @@ export function InfluencerProfileModal({
         if (isPageVisible !== initialIsPageVisible) {
           payload.isPageVisible = isPageVisible;
         }
+        if (rewardRate !== (initialRewardRate ?? null)) {
+          payload.rewardRate = rewardRate;
+        }
 
         return usersApi.setInfluencer(userId, payload);
       }
@@ -123,6 +159,7 @@ export function InfluencerProfileModal({
         displayName: trimmedName,
         slug,
         isPageVisible,
+        ...(rewardRate != null ? { rewardRate } : {}),
         ...(uploadedImageUrl ? { profileImageUrl: uploadedImageUrl } : {}),
       });
     },
@@ -175,12 +212,18 @@ export function InfluencerProfileModal({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const nextFieldError: { displayName?: string; slug?: string } = {};
+    const nextFieldError: { displayName?: string; slug?: string; rewardRate?: string } = {};
     if (!displayName.trim()) {
       nextFieldError.displayName = '초대 페이지에 표시할 이름을 입력해 주세요.';
     }
     if (!SLUG_REGEX.test(slug)) {
       nextFieldError.slug = '소문자, 숫자, 하이픈만 사용할 수 있습니다. (예: kim-pet)';
+    }
+    if (rewardRatePercent.trim()) {
+      const percent = Number(rewardRatePercent);
+      if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
+        nextFieldError.rewardRate = '0~100 사이 숫자를 입력해 주세요. (예: 8 = 8%)';
+      }
     }
     setFieldError(nextFieldError);
     if (Object.keys(nextFieldError).length > 0) return;
@@ -289,6 +332,22 @@ export function InfluencerProfileModal({
             />
           </div>
         </div>
+
+        <FormField
+          label="보상 적립률 (%)"
+          optional
+          type="number"
+          min={0}
+          max={100}
+          step="any"
+          value={rewardRatePercent}
+          onChange={(e) => {
+            setRewardRatePercent(e.target.value);
+            if (fieldError.rewardRate) setFieldError((err) => ({ ...err, rewardRate: undefined }));
+          }}
+          error={fieldError.rewardRate}
+          hint={`비우면 시스템 설정값을 사용합니다. 현재 기본값 ${formatRewardRatePercent(systemRewardRate)}`}
+        />
 
         <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border p-3 transition-colors hover:bg-surface-muted/60">
           <input

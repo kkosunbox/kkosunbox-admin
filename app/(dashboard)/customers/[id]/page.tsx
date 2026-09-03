@@ -296,6 +296,7 @@ export default function CustomerDetailPage() {
         initialSlug={influencerProfile?.slug ?? ''}
         initialProfileImageUrl={influencerProfile?.profileImageUrl ?? null}
         initialIsPageVisible={influencerProfile?.isPageVisible ?? true}
+        initialRewardRate={influencerProfile?.rewardRate ?? null}
         onClose={() => setShowInfluencerModal(false)}
       />
 

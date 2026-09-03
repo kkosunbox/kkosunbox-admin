@@ -204,6 +204,7 @@ export const usersApi = {
       profileImageUrl?: string;
       contractExpiresAt?: string | null;
       isPageVisible?: boolean;
+      rewardRate?: number | null;
     },
   ) =>
     apiClient
@@ -294,6 +295,7 @@ export const influencersApi = {
       slug?: string;
       profileImageUrl?: string | null;
       isPageVisible?: boolean;
+      rewardRate?: number | null;
     },
   ) =>
     apiClient

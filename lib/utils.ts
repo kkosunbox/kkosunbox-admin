@@ -109,3 +109,31 @@ export const SUBSCRIPTION_STATUS_MAP: Record<
   paymentFailed: { label: "결제 실패", color: "bg-red-100 text-red-800" },
   suspended: { label: "정지", color: "bg-orange-100 text-orange-800" },
 };
+
+export const REFERRAL_REWARD_RATE_KEY = "REFERRAL_REWARD_RATE";
+export const DEFAULT_REFERRAL_REWARD_RATE = 0.05;
+
+export function getSystemReferralRewardRate(
+  settings: { key: string; value: string }[] | undefined,
+): number {
+  const raw = settings?.find((s) => s.key === REFERRAL_REWARD_RATE_KEY)?.value;
+  const parsed = raw != null && raw !== "" ? Number(raw) : NaN;
+  return Number.isFinite(parsed) ? parsed : DEFAULT_REFERRAL_REWARD_RATE;
+}
+
+export function formatRewardRatePercent(rate: number): string {
+  return `${Number((rate * 100).toFixed(2))}%`;
+}
+
+export function rateToPercentInput(rate: number | null | undefined): string {
+  if (rate == null) return "";
+  return String(Number((rate * 100).toFixed(4)));
+}
+
+export function percentInputToRate(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const n = Number(trimmed);
+  if (!Number.isFinite(n)) return null;
+  return n / 100;
+}

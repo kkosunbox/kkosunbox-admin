@@ -7,7 +7,7 @@ import { settingsApi, getErrorMessage } from '@/lib/api';
 import { Modal } from '@/components/ui/Modal';
 import { FormField, FormTextarea } from '@/components/ui/FormField';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { formatDateTime } from '@/lib/utils';
+import { formatDateTime, REFERRAL_REWARD_RATE_KEY } from '@/lib/utils';
 import type { SystemSetting } from '@/types';
 
 export default function SettingsPage() {
@@ -80,6 +80,11 @@ export default function SettingsPage() {
                     {setting.description && (
                       <p className="text-xs text-text-muted">{setting.description}</p>
                     )}
+                    {setting.key === REFERRAL_REWARD_RATE_KEY && (
+                      <p className="text-xs text-text-muted">
+                        인플루언서 레퍼럴 보상 기본 적립률입니다. 0~1 사이 값 (예: 0.05 = 5%). 인플루언서별로 따로 지정하지 않으면 이 값을 사용하고, 설정도 없으면 5%입니다.
+                      </p>
+                    )}
                   </div>
                   <FormTextarea
                     label="값"
@@ -123,6 +128,11 @@ export default function SettingsPage() {
                     </div>
                     {setting.description && (
                       <p className="text-xs text-text-muted">{setting.description}</p>
+                    )}
+                    {setting.key === REFERRAL_REWARD_RATE_KEY && (
+                      <p className="text-xs text-text-muted">
+                        인플루언서 레퍼럴 보상 기본 적립률입니다. 0~1 사이 값 (예: 0.05 = 5%). 인플루언서별로 따로 지정하지 않으면 이 값을 사용하고, 설정도 없으면 5%입니다.
+                      </p>
                     )}
                     <p className="mt-2 rounded-xl bg-surface-input/50 px-4 py-3 font-mono text-sm text-text-primary">
                       {setting.value}

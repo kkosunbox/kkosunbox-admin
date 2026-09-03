@@ -18,13 +18,13 @@ import {
   Pencil,
   User,
 } from 'lucide-react';
-import { influencersApi, getErrorMessage } from '@/lib/api';
+import { influencersApi, settingsApi, getErrorMessage } from '@/lib/api';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { InfluencerProfileModal } from '@/components/influencers/InfluencerProfileModal';
-import { USER_STATUS_MAP, formatCurrency, formatDateTime, cn } from '@/lib/utils';
+import { USER_STATUS_MAP, formatCurrency, formatDateTime, cn, formatRewardRatePercent, getSystemReferralRewardRate } from '@/lib/utils';
 import type { InfluencerDetail, InfluencerMonthlySummaryItem, InfluencerSettlement } from '@/types';
 
 const MONTH_NAMES = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
@@ -60,6 +60,12 @@ export default function InfluencerDetailPage() {
     queryFn: () => influencersApi.getById(userId),
     enabled: !!userId,
   });
+
+  const { data: settingsData } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => settingsApi.getList(),
+  });
+  const systemRewardRate = getSystemReferralRewardRate(settingsData?.settings);
 
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
     queryKey: ['influencer-summary', userId, year],
@@ -249,6 +255,18 @@ export default function InfluencerDetailPage() {
                   <span className="font-bold text-text-primary">
                     {(influencerProfile.discountRate * 100).toFixed(0)}%
                   </span>
+                </div>
+
+                <div className="flex items-center gap-1 rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-xs">
+                  <span className="text-text-muted">적립률</span>
+                  <span className="font-bold text-text-primary">
+                    {formatRewardRatePercent(
+                      influencerProfile.rewardRate ?? systemRewardRate,
+                    )}
+                  </span>
+                  {influencerProfile.rewardRate == null && (
+                    <span className="text-text-muted">시스템</span>
+                  )}
                 </div>
 
                 <a
@@ -589,6 +607,7 @@ export default function InfluencerDetailPage() {
         initialSlug={influencerProfile?.slug ?? ''}
         initialProfileImageUrl={influencerProfile?.profileImageUrl ?? null}
         initialIsPageVisible={influencerProfile?.isPageVisible ?? true}
+        initialRewardRate={influencerProfile?.rewardRate ?? null}
         onClose={() => setShowEditModal(false)}
       />
     </div>

@@ -3,16 +3,16 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Truck, Package, MapPin, User, Dog } from 'lucide-react';
+import { ArrowLeft, Truck, Package, MapPin, User } from 'lucide-react';
 import { ordersApi } from '@/lib/api';
 import { Badge } from '@/components/ui/Badge';
 import { DeliveryModal } from '@/components/orders/DeliveryModal';
+import { PetProfileCard } from '@/components/shared/PetProfileCard';
 import {
   PAYMENT_STATUS_MAP,
   DELIVERY_STATUS_MAP,
   formatCurrency,
   formatDateTime,
-  formatDate,
 } from '@/lib/utils';
 import type { Payment } from '@/types';
 
@@ -150,47 +150,10 @@ export default function OrderDetailPage() {
             </section>
           )}
 
-          {/* 반려견 정보 */}
+          {/* 반려견 정보 (체크리스트·추천 결과 포함) */}
           {petProfile && (
             <section className="detail-section">
-              <div className="detail-section-label">
-                <Dog size={13} className="text-brand-400" />
-                반려견 정보
-              </div>
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm sm:grid-cols-3">
-                {petProfile.name && (
-                  <div className="detail-row">
-                    <dt className="text-text-muted">이름</dt>
-                    <dd className="font-medium text-text-primary">{petProfile.name}</dd>
-                  </div>
-                )}
-                {petProfile.breed && (
-                  <div className="detail-row">
-                    <dt className="shrink-0 text-text-muted">견종</dt>
-                    <dd className="truncate font-medium text-text-primary">{petProfile.breed}</dd>
-                  </div>
-                )}
-                {petProfile.weight && (
-                  <div className="detail-row">
-                    <dt className="text-text-muted">체중</dt>
-                    <dd className="font-medium text-text-primary">{petProfile.weight}kg</dd>
-                  </div>
-                )}
-                {petProfile.birthDate && (
-                  <div className="detail-row">
-                    <dt className="text-text-muted">생년월일</dt>
-                    <dd className="font-medium text-text-primary">{formatDate(petProfile.birthDate)}</dd>
-                  </div>
-                )}
-                {petProfile.gender && (
-                  <div className="detail-row">
-                    <dt className="text-text-muted">성별</dt>
-                    <dd className="font-medium text-text-primary">
-                      {petProfile.gender === 'male' ? '수컷' : '암컷'}
-                    </dd>
-                  </div>
-                )}
-              </dl>
+              <PetProfileCard petProfile={petProfile} />
             </section>
           )}
 

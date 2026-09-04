@@ -1,6 +1,6 @@
 'use client';
 
-import { Dog, ClipboardList } from 'lucide-react';
+import { Dog, ClipboardList, Sparkles } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import type { PetProfile } from '@/types';
 
@@ -15,6 +15,9 @@ interface PetProfileCardProps {
 export function PetProfileCard({ petProfile, className, hideLabel }: PetProfileCardProps) {
   const answers = petProfile.checklistAnswers ?? [];
   const hasChecklist = answers.length > 0;
+  const recommendedPlan = petProfile.recommendedPlan ?? null;
+  const reasons = petProfile.recommendReasons ?? [];
+  const hasRecommendation = recommendedPlan != null || reasons.length > 0;
 
   return (
     <div className={`space-y-3 ${className ?? ''}`}>
@@ -102,6 +105,40 @@ export function PetProfileCard({ petProfile, className, hideLabel }: PetProfileC
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* 고객에게 표시된 추천 결과 */}
+      {hasRecommendation && (
+        <div className="space-y-3 pt-1">
+          <div className="flex items-center gap-1.5">
+            <Sparkles size={13} className="text-text-muted" />
+            <span className="text-xs font-semibold text-text-muted">고객에게 표시된 추천</span>
+          </div>
+
+          <div className="space-y-3 rounded-xl bg-brand-50/70 px-3.5 py-3">
+            {recommendedPlan && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-brand-700">추천 플랜</span>
+                <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-brand-700">
+                  {recommendedPlan.name}
+                </span>
+              </div>
+            )}
+
+            {reasons.length > 0 && (
+              <div className="space-y-2.5">
+                {reasons.map((reason, index) => (
+                  <div key={`${reason.title}-${index}`} className="text-sm">
+                    <p className="font-semibold leading-snug text-brand-900">{reason.title}</p>
+                    <p className="mt-0.5 whitespace-pre-wrap text-xs leading-relaxed text-brand-800/80">
+                      {reason.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

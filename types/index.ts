@@ -63,6 +63,17 @@ export interface ChecklistAnswer {
   selectedOptions: ChecklistOption[];
 }
 
+export interface RecommendedPlan {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface RecommendReason {
+  title: string;
+  content: string;
+}
+
 export interface PetProfile {
   id: number;
   userId: number;
@@ -74,6 +85,8 @@ export interface PetProfile {
   profileImageUrl?: string | null;
   specialNotes?: string | null;
   checklistAnswers?: ChecklistAnswer[];
+  recommendedPlan?: RecommendedPlan | null;
+  recommendReasons?: RecommendReason[];
 }
 
 export interface PlanTag {

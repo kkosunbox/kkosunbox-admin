@@ -18,6 +18,7 @@ import {
   canCancelProductOrder,
   canDeliverProductOrder,
   canRefundProductOrder,
+  getKoreaPostTrackingUrl,
 } from '@/lib/utils';
 import type { ProductOrder } from '@/types';
 
@@ -134,7 +135,15 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                 <div>
                   <p className="text-xs text-green-700">배송 완료</p>
                   <p className="text-sm font-semibold text-green-800">
-                    송장번호 {order.trackingNumber}
+                    송장번호{' '}
+                    <a
+                      href={getKoreaPostTrackingUrl(order.trackingNumber)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline underline-offset-2 hover:opacity-80"
+                    >
+                      {order.trackingNumber}
+                    </a>
                   </p>
                   <p className="text-xs text-green-600">{formatDateTime(order.deliveredAt)}</p>
                 </div>
@@ -149,7 +158,15 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                 <div>
                   <p className="text-xs text-blue-700">배송중</p>
                   <p className="text-sm font-semibold text-blue-800">
-                    송장번호 {order.trackingNumber}
+                    송장번호{' '}
+                    <a
+                      href={getKoreaPostTrackingUrl(order.trackingNumber)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline underline-offset-2 hover:opacity-80"
+                    >
+                      {order.trackingNumber}
+                    </a>
                   </p>
                   <p className="text-xs text-blue-600">
                     택배사 배송완료 확인 후 자동으로 배송완료 처리됩니다.

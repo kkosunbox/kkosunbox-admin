@@ -14,7 +14,9 @@ const PAGE_TITLES: Record<string, string> = {
   "/subscriptions": "구독 현황",
   "/plans": "구독 플랜",
   "/products": "상품 관리",
+  "/coupons/usage-logs": "쿠폰 사용내역",
   "/coupons": "쿠폰 관리",
+  "/product-coupons/usage-logs": "단건 쿠폰 사용내역",
   "/product-coupons": "단건 쿠폰 관리",
   "/reviews": "리뷰 관리",
   "/influencers": "인플루언서 관리",
@@ -23,9 +25,9 @@ const PAGE_TITLES: Record<string, string> = {
 
 function getPageTitle(pathname: string): string {
   if (pathname === "/") return "대시보드";
-  const matched = Object.entries(PAGE_TITLES).find(
-    ([key]) => key !== "/" && pathname.startsWith(key),
-  );
+  const matched = Object.entries(PAGE_TITLES)
+    .filter(([key]) => key !== "/" && pathname.startsWith(key))
+    .sort((a, b) => b[0].length - a[0].length)[0];
   return matched?.[1] ?? "관리자";
 }
 

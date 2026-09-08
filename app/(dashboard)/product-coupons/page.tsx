@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, TicketPercent, Loader2, AlertCircle } from "lucide-react";
+import { Plus, Pencil, TicketPercent, Loader2, AlertCircle, History } from "lucide-react";
 import { productCouponsApi, getErrorMessage } from "@/lib/api";
 import { Modal } from "@/components/ui/Modal";
 import { FormField } from "@/components/ui/FormField";
@@ -132,7 +133,10 @@ export default function ProductCouponsPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Link href="/product-coupons/usage-logs" className="btn-secondary">
+          <History size={16} /> 사용내역확인
+        </Link>
         <button onClick={openCreate} className="btn-primary">
           <Plus size={16} /> 쿠폰 추가
         </button>

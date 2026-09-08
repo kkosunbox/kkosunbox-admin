@@ -303,6 +303,40 @@ export interface ProductCoupon {
   updatedAt: string;
 }
 
+export interface CouponUsageLogUser {
+  id: number;
+  email: string;
+}
+
+export interface CouponUsageLog {
+  id: number;
+  couponId: number;
+  userId: number;
+  usedAt: string;
+  user?: CouponUsageLogUser | null;
+  coupon?: Coupon | null;
+  subscription?: {
+    id: number;
+    status?: string;
+    plan?: { id?: number; name: string } | null;
+  } | null;
+}
+
+export interface ProductCouponUsageLog {
+  id: number;
+  couponId: number;
+  userId: number;
+  usedAt: string;
+  user?: CouponUsageLogUser | null;
+  coupon?: ProductCoupon | null;
+  order?: {
+    id: number;
+    productName?: string | null;
+    amount?: number | null;
+    status?: string;
+  } | null;
+}
+
 // ─── System Setting ───────────────────────────────────────────────────────────
 
 export interface SystemSetting {

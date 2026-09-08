@@ -32,6 +32,12 @@ export function formatPhone(phone: string | null | undefined): string {
   return phone.replace(/(\d{3})(\d{3,4})(\d{4})/, "$1-$2-$3");
 }
 
+/** 우체국택배 국내등기/소포 배송조회 */
+export function getKoreaPostTrackingUrl(trackingNumber: string): string {
+  const sid = trackingNumber.replace(/[\s-]/g, "");
+  return `https://service.epost.go.kr/trace.RetrieveRegiPrclDeliv.postal?sid1=${encodeURIComponent(sid)}`;
+}
+
 export const PAYMENT_STATUS_MAP: Record<
   string,
   { label: string; color: string }

@@ -422,6 +422,17 @@ export const couponsApi = {
       endDate: string;
     }>,
   ) => apiClient.patch(`/admin/coupons/${id}`, data).then((r) => r.data.data),
+
+  getUsageLogs: (params?: {
+    page?: number;
+    limit?: number;
+    couponId?: number;
+    userId?: number;
+    search?: string;
+  }) =>
+    apiClient
+      .get('/admin/coupons/usage-logs', { params })
+      .then((r) => r.data.data),
 };
 
 // ─── Product Coupons (단건 상품 쿠폰) ────────────────────────────────────────────
@@ -452,6 +463,17 @@ export const productCouponsApi = {
       endDate: string;
     }>,
   ) => apiClient.patch(`/admin/product-coupons/${id}`, data).then((r) => r.data.data),
+
+  getUsageLogs: (params?: {
+    page?: number;
+    limit?: number;
+    couponId?: number;
+    userId?: number;
+    search?: string;
+  }) =>
+    apiClient
+      .get('/admin/product-coupons/usage-logs', { params })
+      .then((r) => r.data.data),
 };
 
 // ─── Reviews ──────────────────────────────────────────────────────────────────

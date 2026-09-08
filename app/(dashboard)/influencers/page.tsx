@@ -92,7 +92,7 @@ export default function InfluencersPage() {
                 <tr>
                   <th className="table-th">ID</th>
                   <th className="table-th">이메일</th>
-                  <th className="table-th">연락처</th>
+                  <th className="table-th">표기이름</th>
                   <th className="table-th">상태</th>
                   <th className="table-th">가입일</th>
                 </tr>
@@ -100,6 +100,9 @@ export default function InfluencersPage() {
               <tbody className="divide-y divide-border">
                 {influencers.map((influencer) => {
                   const statusInfo = USER_STATUS_MAP[influencer.status];
+                  const displayName =
+                    influencer.displayName?.trim() ||
+                    influencer.influencerProfile?.displayName?.trim();
                   return (
                     <tr
                       key={influencer.id}
@@ -115,7 +118,11 @@ export default function InfluencersPage() {
                         {influencer.email}
                       </td>
                       <td className="table-td text-text-secondary">
-                        {influencer.phone ?? "-"}
+                        {displayName ? (
+                          displayName
+                        ) : (
+                          <span className="text-text-muted">없음</span>
+                        )}
                       </td>
                       <td className="table-td">
                         {statusInfo && (

@@ -377,6 +377,7 @@ export interface Review {
 
 export interface Influencer extends User {
   isInfluencer: boolean;
+  displayName?: string | null;
 }
 
 export interface InfluencerProfile {

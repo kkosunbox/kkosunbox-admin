@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Truck, Package, XCircle, Undo2 } from 'lucide-react';
+import { Search, Truck, Package, XCircle, Undo2 } from 'lucide-react';
 import { productOrdersApi } from '@/lib/api';
 import { useAuth } from '@/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
@@ -27,7 +27,6 @@ import type { ProductOrder } from '@/types';
 const STATUS_FILTERS = [
   { value: 'completed', label: '결제 완료' },
   { value: 'refunded', label: '환불' },
-  { value: 'partially_refunded', label: '부분 환불' },
   { value: '', label: '전체' },
 ];
 
@@ -46,19 +45,22 @@ export function ProductOrderList() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('completed');
   const [deliveryFilter, setDeliveryFilter] = useState('');
+  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<ProductOrder | null>(null);
   const [cancelOrder, setCancelOrder] = useState<ProductOrder | null>(null);
   const [refundOrder, setRefundOrder] = useState<ProductOrder | null>(null);
   const [detailOrderId, setDetailOrderId] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['product-orders', page, statusFilter, deliveryFilter],
+    queryKey: ['product-orders', page, statusFilter, deliveryFilter, search],
     queryFn: () =>
       productOrdersApi.getList({
         page,
         limit: LIMIT,
         status: statusFilter || undefined,
         deliveryStatus: deliveryFilter || undefined,
+        search: search || undefined,
       }),
   });
 
@@ -74,6 +76,12 @@ export function ProductOrderList() {
 
   function handleDeliveryFilterChange(status: string) {
     setDeliveryFilter(status);
+    setPage(1);
+  }
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    setSearch(searchInput.trim());
     setPage(1);
   }
 
@@ -106,6 +114,17 @@ export function ProductOrderList() {
             ))}
           </div>
         )}
+
+        <form onSubmit={handleSearch} className="search-wrapper sm:ml-auto">
+          <Search size={13} className="shrink-0 text-text-muted" />
+          <input
+            type="text"
+            placeholder="이메일로 검색..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="min-w-0 w-40 bg-transparent text-xs outline-none placeholder-text-muted"
+          />
+        </form>
       </div>
 
       {/* Table */}

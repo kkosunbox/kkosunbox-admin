@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
 
 const PAGE_TITLES: Record<string, string> = {
   "/": "대시보드",
-  "/orders": "주문 / 배송 관리",
+  "/orders": "구독 주문",
+  "/product-orders": "단건 주문",
   "/customers": "고객 관리",
   "/inquiries": "문의 관리",
   "/partnership-inquiries": "제휴문의",

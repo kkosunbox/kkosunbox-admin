@@ -155,6 +155,7 @@ export const productOrdersApi = {
     limit?: number;
     status?: string;
     deliveryStatus?: string;
+    search?: string;
   }) =>
     apiClient.get('/admin/product-orders', { params }).then((r) => r.data.data),
 

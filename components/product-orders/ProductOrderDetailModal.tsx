@@ -68,10 +68,7 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
               <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <p className="text-lg font-bold leading-tight text-text-primary">
-                    {order.productName}
-                    {order.quantity > 1 && (
-                      <span className="ml-1 text-sm font-normal text-text-muted">× {order.quantity}</span>
-                    )}
+                    {order.orderName}
                   </p>
                   <p className="mt-0.5 text-sm text-text-muted">{order.user?.email ?? '-'}</p>
                 </div>
@@ -79,6 +76,11 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                   <p className="text-2xl font-bold tracking-tight text-brand-600">
                     {formatCurrency(order.amount)}
                   </p>
+                  {order.refundedAmount > 0 && (
+                    <p className="text-xs text-text-muted">
+                      환불 {formatCurrency(order.refundedAmount)}
+                    </p>
+                  )}
                   <p className="text-xs text-text-muted">{formatDateTime(order.approvedAt)}</p>
                 </div>
               </div>
@@ -113,13 +115,30 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
               )}
             </div>
 
-            {order.status === 'refunded' && order.cancelledAt && (
+            {order.status === 'partially_refunded' && order.deliveryStatus === 'PendingDelivery' && (
+              <div className="detail-callout bg-amber-50">
+                <div className="detail-callout-icon">
+                  <Truck size={16} className="text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-amber-700">부분 환불 · 남은 상품 발송</p>
+                  <p className="text-sm font-semibold text-amber-800">
+                    환불된 라인은 제외하고 남은 수량만 송장 1개로 발송합니다.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {(order.status === 'refunded' || order.status === 'partially_refunded') &&
+              order.cancelledAt && (
               <div className="detail-callout bg-gray-50">
                 <div className="detail-callout-icon">
                   <XCircle size={16} className="text-gray-500" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">환불 처리됨</p>
+                  <p className="text-xs text-gray-500">
+                    {order.status === 'refunded' ? '전액 환불 처리됨' : '부분 환불 처리됨'}
+                  </p>
                   <p className="text-sm font-semibold text-gray-800">
                     {formatDateTime(order.cancelledAt)}
                   </p>
@@ -227,22 +246,58 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
               <section className="detail-section">
                 <div className="detail-section-label">
                   <Package size={13} className="text-brand-400" />
+                  주문 상품
+                </div>
+                <div className="space-y-2">
+                  {(order.items ?? []).map((item) => (
+                    <div key={item.id} className="flex items-start justify-between gap-3 text-sm">
+                      <div className="flex min-w-0 items-start gap-2.5">
+                        {item.imageUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={item.imageUrl}
+                            alt={item.productName}
+                            className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                          />
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-medium text-text-primary">{item.productName}</p>
+                          <p className="text-xs text-text-muted">
+                            단가 {formatCurrency(item.unitPrice)} · 수량 {item.quantity}
+                            {item.refundedQuantity > 0 && ` · 환불 ${item.refundedQuantity}개`}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-[11px] text-text-muted">상품금액</p>
+                        <p className="font-medium text-text-primary">{formatCurrency(item.itemAmount)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="detail-section">
+                <div className="detail-section-label">
+                  <Package size={13} className="text-brand-400" />
                   결제 상세
                 </div>
                 <dl className="space-y-1.5">
                   <div className="detail-row">
-                    <dt className="text-text-muted">상품</dt>
-                    <dd className="font-medium text-text-primary">
-                      {order.productName} × {order.quantity}
-                    </dd>
+                    <dt className="text-text-muted">상품 합계</dt>
+                    <dd className="font-medium text-text-primary">{formatCurrency(order.itemsAmount)}</dd>
                   </div>
+                  {order.couponDiscountAmount > 0 && (
+                    <div className="detail-row">
+                      <dt className="text-text-muted">쿠폰 할인</dt>
+                      <dd className="font-medium text-text-primary">
+                        -{formatCurrency(order.couponDiscountAmount)}
+                      </dd>
+                    </div>
+                  )}
                   <div className="detail-row">
-                    <dt className="text-text-muted">공급가</dt>
-                    <dd className="font-medium text-text-primary">{formatCurrency(order.baseAmount)}</dd>
-                  </div>
-                  <div className="detail-row">
-                    <dt className="text-text-muted">부가세</dt>
-                    <dd className="font-medium text-text-primary">{formatCurrency(order.taxAmount)}</dd>
+                    <dt className="text-text-muted">배송비</dt>
+                    <dd className="font-medium text-text-primary">{formatCurrency(order.shippingFee)}</dd>
                   </div>
                   {order.method && (
                     <div className="detail-row">
@@ -257,9 +312,25 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                     </div>
                   )}
                   <div className="detail-row rounded-xl bg-surface-muted px-3 py-2.5 !mt-3">
-                    <dt className="font-semibold text-text-primary">최종 결제금액</dt>
+                    <dt className="font-semibold text-text-primary">결제금액</dt>
                     <dd className="font-bold text-brand-600">{formatCurrency(order.amount)}</dd>
                   </div>
+                  {order.refundedAmount > 0 && (
+                    <>
+                      <div className="detail-row">
+                        <dt className="text-text-muted">환불액</dt>
+                        <dd className="font-medium text-text-primary">
+                          -{formatCurrency(order.refundedAmount)}
+                        </dd>
+                      </div>
+                      <div className="detail-row">
+                        <dt className="text-text-muted">남은 금액</dt>
+                        <dd className="font-medium text-text-primary">
+                          {formatCurrency(order.amount - order.refundedAmount)}
+                        </dd>
+                      </div>
+                    </>
+                  )}
                 </dl>
               </section>
             </div>

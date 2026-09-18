@@ -36,6 +36,8 @@ apiClient.interceptors.response.use(
 const ERROR_CODE_MESSAGES: Record<string, string> = {
   ALREADY_EXISTS: '이미 사용 중인 slug입니다.',
   INVALID_FILE_FORMAT: 'jpg, jpeg, png, webp 파일만 업로드할 수 있습니다.',
+  PAYMENT_CANCELLATION_NOT_ALLOWED:
+    '부분 취소 후 발생하는 배송비가 취소 금액보다 크거나 같습니다. 전액 취소를 이용해주세요.',
 };
 
 export function getErrorMessage(error: unknown): string {
@@ -132,6 +134,8 @@ export const productsApi = {
     description?: string;
     price: number;
     imageUrl?: string;
+    relatedPlanId?: number | null;
+    stockQuantity?: number | null;
   }) => apiClient.post('/admin/products', data).then((r) => r.data.data),
 
   update: (
@@ -143,6 +147,8 @@ export const productsApi = {
       imageUrl: string;
       isActive: boolean;
       isSalesPaused: boolean;
+      relatedPlanId: number | null;
+      stockQuantity: number | null;
     }>,
   ) => apiClient.patch(`/admin/products/${id}`, data).then((r) => r.data.data),
 };
@@ -167,14 +173,26 @@ export const productOrdersApi = {
       .patch(`/admin/product-orders/${id}/delivery`, { trackingNumber })
       .then((r) => r.data.data),
 
-  cancel: (id: number, cancelReason?: string) =>
+  cancel: (
+    id: number,
+    data?: {
+      cancelReason?: string;
+      items?: { itemId: number; quantity: number }[];
+    },
+  ) =>
     apiClient
-      .post(`/admin/product-orders/${id}/cancel`, { cancelReason })
+      .post(`/admin/product-orders/${id}/cancel`, data ?? {})
       .then((r) => r.data.data),
 
-  refund: (id: number, refundReason?: string) =>
+  refund: (
+    id: number,
+    data?: {
+      refundReason?: string;
+      items?: { itemId: number; quantity: number }[];
+    },
+  ) =>
     apiClient
-      .post(`/admin/product-orders/${id}/refund`, { refundReason })
+      .post(`/admin/product-orders/${id}/refund`, data ?? {})
       .then((r) => r.data.data),
 };
 
@@ -221,7 +239,7 @@ export interface PresignedUrlResult {
   fileName: string;
 }
 
-const PROFILE_IMAGE_EXT_MIME: Record<string, string> = {
+const IMAGE_EXT_MIME: Record<string, string> = {
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',
   png: 'image/png',
@@ -236,16 +254,24 @@ export const assetsApi = {
     apiClient
       .post('/asset/influencer-profile-image/presigned-url', data)
       .then((r) => r.data.data as PresignedUrlResult),
+
+  getCatalogImagePresignedUrl: (data: { fileName: string; fileType: string }) =>
+    apiClient
+      .post('/asset/catalog-image/presigned-url', data)
+      .then((r) => r.data.data as PresignedUrlResult),
 };
 
-export async function uploadInfluencerProfileImage(file: File): Promise<string> {
+async function uploadImageToPresigned(
+  file: File,
+  getPresigned: (data: { fileName: string; fileType: string }) => Promise<PresignedUrlResult>,
+): Promise<string> {
   const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
-  const fileType = file.type || PROFILE_IMAGE_EXT_MIME[ext];
-  if (!fileType || !PROFILE_IMAGE_EXT_MIME[ext]) {
+  const fileType = file.type || IMAGE_EXT_MIME[ext];
+  if (!fileType || !IMAGE_EXT_MIME[ext]) {
     throw new Error('jpg, jpeg, png, webp 파일만 업로드할 수 있습니다.');
   }
 
-  const { uploadUrl, fileUrl } = await assetsApi.getInfluencerProfileImagePresignedUrl({
+  const { uploadUrl, fileUrl } = await getPresigned({
     fileName: file.name,
     fileType,
   });
@@ -259,6 +285,14 @@ export async function uploadInfluencerProfileImage(file: File): Promise<string> 
     throw new Error('이미지 업로드에 실패했습니다.');
   }
   return fileUrl;
+}
+
+export async function uploadInfluencerProfileImage(file: File): Promise<string> {
+  return uploadImageToPresigned(file, assetsApi.getInfluencerProfileImagePresignedUrl);
+}
+
+export async function uploadCatalogImage(file: File): Promise<string> {
+  return uploadImageToPresigned(file, assetsApi.getCatalogImagePresignedUrl);
 }
 
 // ─── Influencers ──────────────────────────────────────────────────────────────
@@ -355,6 +389,8 @@ export const plansApi = {
     discountRate?: number | null;
     sortOrder?: number;
     tagIds?: number[];
+    imageUrl?: string;
+    slug?: string;
   }) => apiClient.post('/admin/plans', data).then((r) => r.data.data),
 
   update: (
@@ -369,6 +405,8 @@ export const plansApi = {
       isActive: boolean;
       isSalesPaused: boolean;
       tagIds: number[];
+      imageUrl: string;
+      slug: string;
     }>,
   ) => apiClient.patch(`/admin/plans/${id}`, data).then((r) => r.data.data),
 
@@ -484,6 +522,7 @@ export const reviewsApi = {
     page?: number;
     limit?: number;
     planId?: number;
+    productId?: number;
     isHidden?: boolean;
   }) => apiClient.get('/admin/reviews', { params }).then((r) => r.data.data),
 

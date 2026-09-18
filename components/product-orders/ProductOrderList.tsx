@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Truck, Package, XCircle, Undo2 } from 'lucide-react';
 import { productOrdersApi } from '@/lib/api';
@@ -26,6 +27,7 @@ import type { ProductOrder } from '@/types';
 
 const STATUS_FILTERS = [
   { value: 'completed', label: '결제 완료' },
+  { value: 'partially_refunded', label: '부분 환불' },
   { value: 'refunded', label: '환불' },
   { value: '', label: '전체' },
 ];
@@ -42,6 +44,9 @@ const LIMIT = 20;
 export function ProductOrderList() {
   const { admin } = useAuth();
   const isAdmin = admin?.role === 'admin';
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryId = searchParams.get('id');
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('completed');
   const [deliveryFilter, setDeliveryFilter] = useState('');
@@ -50,7 +55,21 @@ export function ProductOrderList() {
   const [selectedOrder, setSelectedOrder] = useState<ProductOrder | null>(null);
   const [cancelOrder, setCancelOrder] = useState<ProductOrder | null>(null);
   const [refundOrder, setRefundOrder] = useState<ProductOrder | null>(null);
-  const [detailOrderId, setDetailOrderId] = useState<number | null>(null);
+  const [detailOrderId, setDetailOrderId] = useState<number | null>(() => {
+    const n = queryId ? Number(queryId) : NaN;
+    return Number.isFinite(n) ? n : null;
+  });
+
+  useEffect(() => {
+    if (!queryId) return;
+    const n = Number(queryId);
+    if (Number.isFinite(n)) setDetailOrderId(n);
+  }, [queryId]);
+
+  function closeDetail() {
+    setDetailOrderId(null);
+    if (queryId) router.replace('/product-orders');
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ['product-orders', page, statusFilter, deliveryFilter, search],
@@ -101,7 +120,7 @@ export function ProductOrderList() {
           ))}
         </div>
 
-        {statusFilter === 'completed' && (
+        {(statusFilter === 'completed' || statusFilter === 'partially_refunded') && (
           <div className="filter-tabs">
             {DELIVERY_FILTERS.map((f) => (
               <button
@@ -152,7 +171,7 @@ export function ProductOrderList() {
                 <tr>
                   <th className="table-th">주문 ID</th>
                   <th className="table-th">고객</th>
-                  <th className="table-th">상품</th>
+                  <th className="table-th">주문명</th>
                   <th className="table-th">수량</th>
                   <th className="table-th">금액</th>
                   <th className="table-th">결제 상태</th>
@@ -182,11 +201,16 @@ export function ProductOrderList() {
                         <p className="text-sm text-text-primary">{order.user?.email ?? '-'}</p>
                       </td>
                       <td className="table-td">
-                        <p className="font-medium text-text-primary">{order.productName}</p>
+                        <p className="font-medium text-text-primary">{order.orderName}</p>
                       </td>
-                      <td className="table-td text-text-secondary">{order.quantity}</td>
-                      <td className="table-td font-semibold text-text-primary">
-                        {formatCurrency(order.amount)}
+                      <td className="table-td text-text-secondary">{order.totalQuantity}</td>
+                      <td className="table-td">
+                        <p className="font-semibold text-text-primary">{formatCurrency(order.amount)}</p>
+                        {order.refundedAmount > 0 && (
+                          <p className="text-xs text-text-muted">
+                            환불 {formatCurrency(order.refundedAmount)}
+                          </p>
+                        )}
                       </td>
                       <td className="table-td">
                         {paymentStatus && <Badge label={paymentStatus.label} color={paymentStatus.color} />}
@@ -262,7 +286,7 @@ export function ProductOrderList() {
       <DeliveryModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
       <CancelOrderModal order={cancelOrder} onClose={() => setCancelOrder(null)} />
       <RefundOrderModal order={refundOrder} onClose={() => setRefundOrder(null)} />
-      <ProductOrderDetailModal orderId={detailOrderId} onClose={() => setDetailOrderId(null)} />
+      <ProductOrderDetailModal orderId={detailOrderId} onClose={closeDetail} />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Modal } from "@/components/ui/Modal";
 import { FormField } from "@/components/ui/FormField";
 import { productOrdersApi, getErrorMessage } from "@/lib/api";
+import { formatCurrency } from "@/lib/utils";
 import type { ProductOrder } from "@/types";
 
 const schema = z.object({
@@ -67,13 +68,13 @@ export function DeliveryModal({ order, onClose }: DeliveryModalProps) {
           <div className="rounded-xl bg-surface-input/50 p-4 text-sm">
             <p className="text-xs font-medium text-text-muted">주문 정보</p>
             <p className="mt-1.5 font-semibold text-text-primary">
-              {order.productName} {order.quantity > 1 && `× ${order.quantity}`}
+              {order.orderName}
             </p>
             <p className="text-text-secondary">
               {order.user?.email ?? `주문 #${order.id}`}
             </p>
             <p className="mt-1 font-semibold text-brand-500">
-              {order.amount.toLocaleString()}원
+              {formatCurrency(order.amount)}
             </p>
           </div>
 

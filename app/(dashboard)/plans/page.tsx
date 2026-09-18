@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Pencil, Tag, Loader2, Trash2, AlertCircle } from 'lucide-react';
-import { plansApi, planTagsApi, getErrorMessage } from '@/lib/api';
+import { plansApi, planTagsApi, uploadCatalogImage, getErrorMessage } from '@/lib/api';
 import { Modal } from '@/components/ui/Modal';
 import { FormField, FormTextarea } from '@/components/ui/FormField';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SalesPauseBar } from '@/components/sales/SalesPauseBar';
+import { CatalogImageField } from '@/components/shared/CatalogImageField';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { SubscriptionPlan, PlanTag } from '@/types';
 
@@ -39,9 +40,13 @@ export default function PlansPage() {
     originalPrice: '',
     discountRate: '',
     sortOrder: '0',
+    slug: '',
+    imageUrl: '',
   });
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [planError, setPlanError] = useState('');
+  const [planImageFile, setPlanImageFile] = useState<File | null>(null);
+  const [planImagePreview, setPlanImagePreview] = useState<string | null>(null);
 
   // ── 태그 모달 상태
   const [showTagModal, setShowTagModal] = useState(false);
@@ -65,8 +70,11 @@ export default function PlansPage() {
 
   // ── 플랜 뮤테이션
   const createPlanMutation = useMutation({
-    mutationFn: () =>
-      plansApi.create({
+    mutationFn: async () => {
+      const imageUrl = planImageFile
+        ? await uploadCatalogImage(planImageFile)
+        : planForm.imageUrl || undefined;
+      return plansApi.create({
         name: planForm.name,
         description: planForm.description || undefined,
         monthlyPrice: Number(planForm.monthlyPrice),
@@ -74,14 +82,20 @@ export default function PlansPage() {
         discountRate: planForm.discountRate ? Number(planForm.discountRate) : null,
         sortOrder: Number(planForm.sortOrder),
         tagIds: selectedTagIds,
-      }),
+        slug: planForm.slug || undefined,
+        imageUrl,
+      });
+    },
     onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['plans'] }); closePlanModal(); },
     onError: (err) => setPlanError(getErrorMessage(err)),
   });
 
   const updatePlanMutation = useMutation({
-    mutationFn: () =>
-      plansApi.update(editPlan!.id, {
+    mutationFn: async () => {
+      const imageUrl = planImageFile
+        ? await uploadCatalogImage(planImageFile)
+        : planForm.imageUrl;
+      return plansApi.update(editPlan!.id, {
         name: planForm.name,
         description: planForm.description,
         monthlyPrice: Number(planForm.monthlyPrice),
@@ -89,7 +103,10 @@ export default function PlansPage() {
         discountRate: planForm.discountRate ? Number(planForm.discountRate) : null,
         sortOrder: Number(planForm.sortOrder),
         tagIds: selectedTagIds,
-      }),
+        slug: planForm.slug,
+        imageUrl,
+      });
+    },
     onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['plans'] }); closePlanModal(); },
     onError: (err) => setPlanError(getErrorMessage(err)),
   });
@@ -127,9 +144,20 @@ export default function PlansPage() {
   // ── 플랜 모달 핸들러
   function openCreatePlan() {
     setEditPlan(null);
-    setPlanForm({ name: '', description: '', monthlyPrice: '', originalPrice: '', discountRate: '', sortOrder: '0' });
+    setPlanForm({
+      name: '',
+      description: '',
+      monthlyPrice: '',
+      originalPrice: '',
+      discountRate: '',
+      sortOrder: '0',
+      slug: '',
+      imageUrl: '',
+    });
     setSelectedTagIds([]);
     setPlanError('');
+    setPlanImageFile(null);
+    setPlanImagePreview(null);
     setShowPlanModal(true);
   }
 
@@ -142,15 +170,29 @@ export default function PlansPage() {
       originalPrice: plan.originalPrice ? String(plan.originalPrice) : '',
       discountRate: plan.discountRate ? String(plan.discountRate) : '',
       sortOrder: String(plan.sortOrder),
+      slug: plan.slug ?? '',
+      imageUrl: plan.imageUrl ?? '',
     });
     setSelectedTagIds(plan.tags?.map((t) => t.id) ?? []);
     setPlanError('');
+    setPlanImageFile(null);
+    setPlanImagePreview(plan.imageUrl ?? null);
     setShowPlanModal(true);
   }
 
   function closePlanModal() {
+    if (planImagePreview?.startsWith('blob:')) URL.revokeObjectURL(planImagePreview);
     setShowPlanModal(false);
     setEditPlan(null);
+    setPlanImageFile(null);
+    setPlanImagePreview(null);
+  }
+
+  function handlePlanImageSelect(file: File, previewUrl: string) {
+    if (planImagePreview?.startsWith('blob:')) URL.revokeObjectURL(planImagePreview);
+    setPlanImageFile(file);
+    setPlanImagePreview(previewUrl);
+    setPlanError('');
   }
 
   function handlePlanSubmit(e: React.FormEvent) {
@@ -220,10 +262,36 @@ export default function PlansPage() {
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {plans.map((plan) => (
-              <div key={plan.id} className={cn('card p-5 transition-all', !plan.isActive && 'opacity-60')}>
+              <div
+                key={plan.id}
+                className={cn('card overflow-hidden transition-all', !plan.isActive && 'opacity-60')}
+              >
+                <div className="flex h-36 items-center justify-center bg-surface-muted">
+                  {plan.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={plan.imageUrl}
+                      alt={plan.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <Tag size={28} className="text-text-muted/50" />
+                  )}
+                </div>
+                <div className="p-5">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
-                    <Tag size={18} className="text-brand-500" />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-text-primary">{plan.name}</h3>
+                      {plan.isSalesPaused && (
+                        <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                          판매 중단
+                        </span>
+                      )}
+                    </div>
+                    {plan.slug && (
+                      <p className="mt-0.5 font-mono text-[11px] text-text-muted">{plan.slug}</p>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -243,15 +311,6 @@ export default function PlansPage() {
                     ))}
                   </div>
                 )}
-
-                <div className="mt-3 flex items-center gap-2">
-                  <h3 className="font-bold text-text-primary">{plan.name}</h3>
-                  {plan.isSalesPaused && (
-                    <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
-                      판매 중단
-                    </span>
-                  )}
-                </div>
                 {plan.description && (
                   <p className="mt-1 text-xs text-text-muted">{plan.description}</p>
                 )}
@@ -307,6 +366,7 @@ export default function PlansPage() {
                   >
                     {plan.isActive ? '비활성화' : '활성화'}
                   </button>
+                </div>
                 </div>
               </div>
             ))}
@@ -385,7 +445,7 @@ export default function PlansPage() {
         isOpen={showPlanModal}
         onClose={closePlanModal}
         title={editPlan ? '플랜 수정' : '플랜 추가'}
-        size="sm"
+        size="md"
       >
         <form onSubmit={handlePlanSubmit} className="space-y-4">
           <FormField
@@ -393,6 +453,13 @@ export default function PlansPage() {
             value={planForm.name}
             onChange={(e) => setPlanForm((f) => ({ ...f, name: e.target.value }))}
             required
+          />
+          <FormField
+            label="slug"
+            optional
+            value={planForm.slug}
+            onChange={(e) => setPlanForm((f) => ({ ...f, slug: e.target.value }))}
+            hint="유저 뱃지 값입니다. 연관 단품에서 이 값을 보여 줍니다. 예: basic, standard, premium"
           />
           <FormTextarea
             label="설명"
@@ -463,6 +530,13 @@ export default function PlansPage() {
               </div>
             </div>
           )}
+
+          <CatalogImageField
+            previewUrl={planImagePreview}
+            onFileSelect={handlePlanImageSelect}
+            onError={setPlanError}
+            disabled={isPlanPending}
+          />
 
           {planError && (
             <div className="form-error-banner">

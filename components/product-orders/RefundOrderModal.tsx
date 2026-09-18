@@ -1,10 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2, Undo2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal } from '@/components/ui/Modal';
 import { FormTextarea } from '@/components/ui/FormField';
+import {
+  ProductOrderItemQuantityPicker,
+  selectedRefundItems,
+} from '@/components/product-orders/ProductOrderItemQuantityPicker';
 import { productOrdersApi, getErrorMessage } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import type { ProductOrder } from '@/types';
@@ -18,11 +22,26 @@ interface RefundOrderModalProps {
 export function RefundOrderModal({ order, onClose, onSuccess }: RefundOrderModalProps) {
   const queryClient = useQueryClient();
   const [refundReason, setRefundReason] = useState('');
+  const [quantities, setQuantities] = useState<Record<number, number>>({});
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    if (!order) return;
+    setRefundReason('');
+    setQuantities({});
+    setError('');
+  }, [order]);
+
   const mutation = useMutation({
-    mutationFn: ({ id, refundReason }: { id: number; refundReason: string }) =>
-      productOrdersApi.refund(id, refundReason || undefined),
+    mutationFn: ({
+      id,
+      refundReason,
+      items,
+    }: {
+      id: number;
+      refundReason?: string;
+      items?: { itemId: number; quantity: number }[];
+    }) => productOrdersApi.refund(id, { refundReason, items }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['product-orders'] });
       void queryClient.invalidateQueries({ queryKey: ['calendar'] });
@@ -34,33 +53,64 @@ export function RefundOrderModal({ order, onClose, onSuccess }: RefundOrderModal
 
   function handleClose() {
     if (mutation.isPending) return;
-    setRefundReason('');
-    setError('');
     onClose();
   }
 
-  function handleConfirm() {
+  function handlePartialRefund() {
+    if (!order) return;
+    const items = selectedRefundItems(quantities);
+    if (items.length === 0) {
+      setError('환불할 수량을 입력해주세요.');
+      return;
+    }
+    setError('');
+    mutation.mutate({
+      id: order.id,
+      refundReason: refundReason || undefined,
+      items,
+    });
+  }
+
+  function handleFullRefund() {
     if (!order) return;
     setError('');
-    mutation.mutate({ id: order.id, refundReason });
+    mutation.mutate({
+      id: order.id,
+      refundReason: refundReason || undefined,
+    });
   }
 
   return (
-    <Modal isOpen={!!order} onClose={handleClose} title="환불 처리" size="sm">
+    <Modal isOpen={!!order} onClose={handleClose} title="환불 처리" size="md">
       {order && (
         <div className="space-y-4">
           <div className="rounded-xl bg-surface-muted p-4 text-sm">
             <p className="text-text-muted">환불 대상</p>
-            <p className="mt-1 font-semibold text-text-primary">
-              {order.productName} {order.quantity > 1 && `× ${order.quantity}`}
-            </p>
+            <p className="mt-1 font-semibold text-text-primary">{order.orderName}</p>
             <p className="text-text-secondary">{order.user?.email ?? `주문 #${order.id}`}</p>
             <p className="mt-1 font-bold text-brand-500">{formatCurrency(order.amount)}</p>
+            {order.refundedAmount > 0 && (
+              <p className="text-xs text-text-muted">
+                이미 환불 {formatCurrency(order.refundedAmount)}
+              </p>
+            )}
           </div>
 
+          <ProductOrderItemQuantityPicker
+            items={order.items ?? []}
+            quantities={quantities}
+            onChange={(itemId, quantity) =>
+              setQuantities((prev) => ({ ...prev, [itemId]: quantity }))
+            }
+          />
+
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-            배송 상태와 무관하게 즉시 PG 환불이 처리됩니다. 배송중/배송완료 주문도 환불할 수 있습니다.
+            배송중/배송완료 주문도 즉시 PG 환불됩니다. 환불된 수량만큼 재고가 복원됩니다.
           </div>
+          <p className="text-xs text-text-muted">
+            부분 환불 후 남은 상품 정가 합계가 무료배송 기준 밑이면 배송비가 다시 붙어 환불액이
+            줄어듭니다. 배송비까지 포함해 남은 금액을 모두 돌려주려면 남은 전량 환불을 사용하세요.
+          </p>
 
           <FormTextarea
             label="환불 사유"
@@ -88,23 +138,31 @@ export function RefundOrderModal({ order, onClose, onSuccess }: RefundOrderModal
             </button>
             <button
               type="button"
-              onClick={handleConfirm}
+              onClick={handlePartialRefund}
               disabled={mutation.isPending}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600 disabled:opacity-50"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100 disabled:opacity-50"
             >
-              {mutation.isPending ? (
-                <>
-                  <Loader2 size={14} className="animate-spin" />
-                  처리 중...
-                </>
-              ) : (
-                <>
-                  <Undo2 size={14} />
-                  환불하기
-                </>
-              )}
+              {mutation.isPending ? <Loader2 size={14} className="animate-spin" /> : '선택 수량 환불'}
             </button>
           </div>
+          <button
+            type="button"
+            onClick={handleFullRefund}
+            disabled={mutation.isPending}
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600 disabled:opacity-50"
+          >
+            {mutation.isPending ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                처리 중...
+              </>
+            ) : (
+              <>
+                <Undo2 size={14} />
+                남은 전량 환불
+              </>
+            )}
+          </button>
         </div>
       )}
     </Modal>

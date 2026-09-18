@@ -1,14 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Save, Settings, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Save, Settings, Loader2, AlertCircle, Truck } from 'lucide-react';
 import { settingsApi, getErrorMessage } from '@/lib/api';
 import { Modal } from '@/components/ui/Modal';
 import { FormField, FormTextarea } from '@/components/ui/FormField';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { formatDateTime, REFERRAL_REWARD_RATE_KEY } from '@/lib/utils';
+import {
+  formatDateTime,
+  REFERRAL_REWARD_RATE_KEY,
+  PRODUCT_SHIPPING_FEE_KEY,
+  PRODUCT_FREE_SHIPPING_THRESHOLD_KEY,
+  DEFAULT_PRODUCT_SHIPPING_FEE,
+  DEFAULT_PRODUCT_FREE_SHIPPING_THRESHOLD,
+} from '@/lib/utils';
 import type { SystemSetting } from '@/types';
+
+const SHIPPING_SETTING_KEYS = [
+  PRODUCT_SHIPPING_FEE_KEY,
+  PRODUCT_FREE_SHIPPING_THRESHOLD_KEY,
+];
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
@@ -18,6 +30,11 @@ export default function SettingsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newForm, setNewForm] = useState({ key: '', value: '', description: '' });
   const [error, setError] = useState('');
+  const [shippingForm, setShippingForm] = useState({
+    fee: DEFAULT_PRODUCT_SHIPPING_FEE,
+    threshold: DEFAULT_PRODUCT_FREE_SHIPPING_THRESHOLD,
+  });
+  const [shippingError, setShippingError] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['settings'],
@@ -25,6 +42,16 @@ export default function SettingsPage() {
   });
 
   const settings: SystemSetting[] = data?.settings ?? [];
+  const shippingFeeSetting = settings.find((s) => s.key === PRODUCT_SHIPPING_FEE_KEY);
+  const thresholdSetting = settings.find((s) => s.key === PRODUCT_FREE_SHIPPING_THRESHOLD_KEY);
+  const otherSettings = settings.filter((s) => !SHIPPING_SETTING_KEYS.includes(s.key));
+
+  useEffect(() => {
+    setShippingForm({
+      fee: shippingFeeSetting?.value ?? DEFAULT_PRODUCT_SHIPPING_FEE,
+      threshold: thresholdSetting?.value ?? DEFAULT_PRODUCT_FREE_SHIPPING_THRESHOLD,
+    });
+  }, [shippingFeeSetting?.value, thresholdSetting?.value]);
 
   const updateMutation = useMutation({
     mutationFn: () =>
@@ -46,6 +73,52 @@ export default function SettingsPage() {
     onError: (err) => setError(getErrorMessage(err)),
   });
 
+  const shippingMutation = useMutation({
+    mutationFn: async () => {
+      const fee = shippingForm.fee.trim();
+      const threshold = shippingForm.threshold.trim();
+      const feeNum = Number(fee);
+      const thresholdNum = Number(threshold);
+      if (!Number.isInteger(feeNum) || feeNum < 0) {
+        throw new Error('기본 배송비는 0 이상의 정수로 입력해주세요.');
+      }
+      if (!Number.isInteger(thresholdNum) || thresholdNum < 0) {
+        throw new Error('무료배송 기준 금액은 0 이상의 정수로 입력해주세요.');
+      }
+
+      async function saveKey(
+        key: string,
+        value: string,
+        description: string,
+        existing?: SystemSetting,
+      ) {
+        if (existing) {
+          await settingsApi.update(key, { value, description: existing.description ?? description });
+        } else {
+          await settingsApi.create({ key, value, description });
+        }
+      }
+
+      await saveKey(
+        PRODUCT_SHIPPING_FEE_KEY,
+        fee,
+        '단품 기본 배송비 (원)',
+        shippingFeeSetting,
+      );
+      await saveKey(
+        PRODUCT_FREE_SHIPPING_THRESHOLD_KEY,
+        threshold,
+        '단품 무료배송 기준 금액 (원). 쿠폰 할인 전 상품 정가 합계 기준. 0이면 항상 기본 배송비',
+        thresholdSetting,
+      );
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['settings'] });
+      setShippingError('');
+    },
+    onError: (err) => setShippingError(getErrorMessage(err)),
+  });
+
   function openEdit(setting: SystemSetting) {
     setEditSetting(setting);
     setEditValue(setting.value);
@@ -65,13 +138,66 @@ export default function SettingsPage() {
         <div className="flex h-64 items-center justify-center">
           <div className="spinner" />
         </div>
-      ) : settings.length === 0 ? (
+      ) : (
+        <>
+      <div className="card p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Truck size={16} className="text-brand-500" />
+          <h2 className="font-bold text-text-primary">단품 배송비</h2>
+        </div>
+        <p className="mb-4 text-xs text-text-muted">
+          단품 주문에만 적용됩니다. 구독 결제에는 쓰이지 않습니다. 무료배송 기준은 쿠폰 할인 전
+          상품 정가 합계이며, 0이면 항상 기본 배송비가 붙습니다. 이미 생성된 주문의 배송비는
+          결제 시점 값으로 유지됩니다.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <FormField
+            label="기본 배송비 (원)"
+            type="number"
+            min={0}
+            value={shippingForm.fee}
+            onChange={(e) => setShippingForm((f) => ({ ...f, fee: e.target.value }))}
+          />
+          <FormField
+            label="무료배송 기준 금액 (원)"
+            type="number"
+            min={0}
+            value={shippingForm.threshold}
+            onChange={(e) => setShippingForm((f) => ({ ...f, threshold: e.target.value }))}
+          />
+        </div>
+        {shippingError && (
+          <div className="form-error-banner mt-3">
+            <AlertCircle size={15} className="mt-0.5 shrink-0" />
+            <span>{shippingError}</span>
+          </div>
+        )}
+        <div className="mt-4 flex justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              setShippingError('');
+              shippingMutation.mutate();
+            }}
+            disabled={shippingMutation.isPending}
+            className="btn-primary"
+          >
+            {shippingMutation.isPending ? (
+              <><Loader2 size={14} className="animate-spin" /> 저장 중...</>
+            ) : (
+              <><Save size={14} /> 배송비 저장</>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {otherSettings.length === 0 ? (
         <div className="card p-8">
-          <EmptyState icon={Settings} title="시스템 설정이 없습니다." />
+          <EmptyState icon={Settings} title="기타 시스템 설정이 없습니다." />
         </div>
       ) : (
         <div className="card divide-y divide-border overflow-hidden">
-          {settings.map((setting) => (
+          {otherSettings.map((setting) => (
             <div key={setting.id} className="px-5 py-4">
               {editSetting?.id === setting.id ? (
                 <div className="space-y-3">
@@ -152,6 +278,8 @@ export default function SettingsPage() {
             </div>
           ))}
         </div>
+      )}
+        </>
       )}
 
       <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="설정 추가" size="sm">

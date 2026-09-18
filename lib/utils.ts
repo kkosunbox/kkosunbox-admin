@@ -2,7 +2,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { format, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
-import type { ProductOrder } from "@/types";
+import type { ProductOrder, ProductOrderItem } from "@/types";
 
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
@@ -70,22 +70,43 @@ export const DELIVERY_STATUS_MAP: Record<
   },
 };
 
+export function remainingItemQuantity(item: ProductOrderItem): number {
+  return Math.max(0, item.quantity - item.refundedQuantity);
+}
+
+export function hasRefundableProductOrderItems(order: ProductOrder): boolean {
+  return (order.items ?? []).some((item) => remainingItemQuantity(item) > 0);
+}
+
+function isProductOrderRefundableStatus(status: ProductOrder["status"]): boolean {
+  return status === "completed" || status === "partially_refunded";
+}
+
 /* 단건 주문 액션 가능 여부 — /admin/product-orders 스펙 기준 */
 
 export function canDeliverProductOrder(order: ProductOrder): boolean {
-  return order.status === "completed" && order.deliveryStatus === "PendingDelivery";
+  return (
+    (order.status === "completed" || order.status === "partially_refunded") &&
+    order.deliveryStatus === "PendingDelivery" &&
+    hasRefundableProductOrderItems(order)
+  );
 }
 
 export function canCancelProductOrder(order: ProductOrder): boolean {
-  return order.status === "completed" && order.deliveryStatus === "PendingDelivery";
+  return (
+    isProductOrderRefundableStatus(order.status) &&
+    order.deliveryStatus === "PendingDelivery" &&
+    hasRefundableProductOrderItems(order)
+  );
 }
 
 /** 배송 시작 전 건은 '결제 취소'로 처리하므로 강제 환불 대상에서 제외한다. */
 export function canRefundProductOrder(order: ProductOrder): boolean {
   return (
-    order.status === "completed" &&
+    isProductOrderRefundableStatus(order.status) &&
     (order.deliveryStatus === "DeliveryInProgress" ||
-      order.deliveryStatus === "DeliveryCompleted")
+      order.deliveryStatus === "DeliveryCompleted") &&
+    hasRefundableProductOrderItems(order)
   );
 }
 
@@ -118,6 +139,11 @@ export const SUBSCRIPTION_STATUS_MAP: Record<
 
 export const REFERRAL_REWARD_RATE_KEY = "REFERRAL_REWARD_RATE";
 export const DEFAULT_REFERRAL_REWARD_RATE = 0.05;
+
+export const PRODUCT_SHIPPING_FEE_KEY = "PRODUCT_SHIPPING_FEE";
+export const PRODUCT_FREE_SHIPPING_THRESHOLD_KEY = "PRODUCT_FREE_SHIPPING_THRESHOLD";
+export const DEFAULT_PRODUCT_SHIPPING_FEE = "3000";
+export const DEFAULT_PRODUCT_FREE_SHIPPING_THRESHOLD = "50000";
 
 export function getSystemReferralRewardRate(
   settings: { key: string; value: string }[] | undefined,

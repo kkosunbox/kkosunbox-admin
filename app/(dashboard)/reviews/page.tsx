@@ -4,13 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Star, Image as ImageIcon, Eye, EyeOff, Loader2, ExternalLink } from 'lucide-react';
-import { reviewsApi, plansApi, getErrorMessage } from '@/lib/api';
+import { reviewsApi, plansApi, productsApi, getErrorMessage } from '@/lib/api';
 import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
 import { Pagination } from '@/components/ui/Pagination';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatDateTime, formatCurrency, cn } from '@/lib/utils';
-import type { Review, SubscriptionPlan } from '@/types';
+import type { Product, Review, SubscriptionPlan } from '@/types';
 
 const LIMIT = 20;
 
@@ -45,15 +45,17 @@ export default function ReviewsPage() {
   const [page, setPage] = useState(1);
   const [hiddenFilter, setHiddenFilter] = useState<HiddenFilter>('all');
   const [planIdFilter, setPlanIdFilter] = useState<string>('');
+  const [productIdFilter, setProductIdFilter] = useState<string>('');
   const [selectedReviewId, setSelectedReviewId] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['reviews', page, hiddenFilter, planIdFilter],
+    queryKey: ['reviews', page, hiddenFilter, planIdFilter, productIdFilter],
     queryFn: () =>
       reviewsApi.getList({
         page,
         limit: LIMIT,
         planId: planIdFilter ? Number(planIdFilter) : undefined,
+        productId: productIdFilter ? Number(productIdFilter) : undefined,
         isHidden:
           hiddenFilter === 'true'
             ? true
@@ -66,6 +68,11 @@ export default function ReviewsPage() {
   const { data: plansData } = useQuery({
     queryKey: ['plans'],
     queryFn: () => plansApi.getList(),
+  });
+
+  const { data: products } = useQuery<Product[]>({
+    queryKey: ['products'],
+    queryFn: () => productsApi.getList(),
   });
 
   const { data: detailData, isLoading: detailLoading } = useQuery({
@@ -102,6 +109,11 @@ export default function ReviewsPage() {
 
   function handlePlanChange(e: React.ChangeEvent<HTMLSelectElement>) {
     setPlanIdFilter(e.target.value);
+    setPage(1);
+  }
+
+  function handleProductChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    setProductIdFilter(e.target.value);
     setPage(1);
   }
 
@@ -150,6 +162,19 @@ export default function ReviewsPage() {
             </option>
           ))}
         </select>
+
+        <select
+          value={productIdFilter}
+          onChange={handleProductChange}
+          className="rounded-xl border border-border bg-white px-3 py-2 text-xs font-medium text-text-secondary outline-none transition-colors focus:border-brand-400 hover:bg-surface-muted"
+        >
+          <option value="">전체 상품</option>
+          {(products ?? []).map((product) => (
+            <option key={product.id} value={String(product.id)}>
+              {product.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* 테이블 */}
@@ -172,7 +197,7 @@ export default function ReviewsPage() {
               <thead className="border-b border-border bg-surface-muted">
                 <tr>
                   <th className="table-th">ID</th>
-                  <th className="table-th">플랜</th>
+                  <th className="table-th">대상</th>
                   <th className="table-th">작성자</th>
                   <th className="table-th">별점</th>
                   <th className="table-th">내용</th>
@@ -196,7 +221,23 @@ export default function ReviewsPage() {
                       #{review.id}
                     </td>
                     <td className="table-td text-sm text-text-primary">
-                      {review.plan?.name ?? '-'}
+                      {review.plan?.name ? (
+                        <span>
+                          <span className="mr-1 rounded bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
+                            플랜
+                          </span>
+                          {review.plan.name}
+                        </span>
+                      ) : review.product?.name ? (
+                        <span>
+                          <span className="mr-1 rounded bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
+                            상품
+                          </span>
+                          {review.product.name}
+                        </span>
+                      ) : (
+                        '-'
+                      )}
                     </td>
                     <td className="table-td max-w-[160px]">
                       <p className="truncate text-xs text-text-secondary">
@@ -322,27 +363,44 @@ export default function ReviewsPage() {
                 <p className="font-mono font-medium text-text-primary">#{detail.id}</p>
               </div>
               <div>
-                <p className="mb-0.5 text-xs text-text-muted">플랜</p>
+                <p className="mb-0.5 text-xs text-text-muted">대상</p>
                 <p className="font-medium text-text-primary">
-                  {detail.plan?.name ?? '-'}
+                  {detail.plan?.name ?? detail.product?.name ?? '-'}
                   {detail.plan?.monthlyPrice != null && (
                     <span className="ml-1 text-xs font-normal text-text-muted">
                       ({formatCurrency(detail.plan.monthlyPrice)})
                     </span>
                   )}
                 </p>
+                <p className="text-xs text-text-muted">
+                  {detail.planId != null ? '구독 플랜 리뷰' : '독립 상품 리뷰'}
+                </p>
               </div>
               <div>
-                <p className="mb-0.5 text-xs text-text-muted">결제 ID</p>
-                {detail.subscriptionPaymentId != null ? (
-                  <Link
-                    href={`/orders/${detail.subscriptionPaymentId}`}
-                    className="inline-flex items-center gap-1 font-mono text-sm font-medium text-brand-600 hover:text-brand-700 hover:underline"
-                    onClick={closeDetail}
-                  >
-                    #{detail.subscriptionPaymentId}
-                    <ExternalLink size={11} />
-                  </Link>
+                <p className="mb-0.5 text-xs text-text-muted">주문</p>
+                {detail.subscriptionPaymentId != null || detail.productOrderId != null ? (
+                  <div className="flex flex-col gap-1">
+                    {detail.subscriptionPaymentId != null && (
+                      <Link
+                        href={`/orders/${detail.subscriptionPaymentId}`}
+                        className="inline-flex items-center gap-1 font-mono text-sm font-medium text-brand-600 hover:text-brand-700 hover:underline"
+                        onClick={closeDetail}
+                      >
+                        구독 #{detail.subscriptionPaymentId}
+                        <ExternalLink size={11} />
+                      </Link>
+                    )}
+                    {detail.productOrderId != null && (
+                      <Link
+                        href={`/product-orders?id=${detail.productOrderId}`}
+                        className="inline-flex items-center gap-1 font-mono text-sm font-medium text-brand-600 hover:text-brand-700 hover:underline"
+                        onClick={closeDetail}
+                      >
+                        단품 #{detail.productOrderId}
+                        <ExternalLink size={11} />
+                      </Link>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-sm text-text-muted">-</p>
                 )}

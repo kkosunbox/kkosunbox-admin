@@ -194,7 +194,7 @@ function OrderCell({ item }: { item: ProductCouponUsageLog }) {
   return (
     <div className="flex flex-col gap-0.5">
       <span className="font-medium text-text-primary">
-        {order.productName ?? `주문 #${order.id}`}
+        {order.orderName ?? order.productName ?? `주문 #${order.id}`}
       </span>
       <span className="text-xs text-text-muted">
         #{order.id}

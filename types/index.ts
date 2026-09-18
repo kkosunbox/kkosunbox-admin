@@ -107,6 +107,8 @@ export interface SubscriptionPlan {
   isActive: boolean;
   isSalesPaused?: boolean;
   sortOrder: number;
+  imageUrl?: string | null;
+  slug?: string | null;
   tags?: PlanTag[];
   createdAt: string;
   updatedAt: string;
@@ -169,6 +171,8 @@ export interface Product {
   imageUrl?: string | null;
   isActive: boolean;
   isSalesPaused?: boolean;
+  stockQuantity: number | null;
+  relatedPlanId: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -179,16 +183,31 @@ export interface PauseAllSalesResult {
   planCount: number;
 }
 
+export interface ProductOrderItem {
+  id: number;
+  productId: number;
+  productName: string;
+  unitPrice: number;
+  quantity: number;
+  itemAmount: number;
+  allocatedAmount: number;
+  refundedQuantity: number;
+  refundedAmount: number;
+  relatedPlanId: number | null;
+  imageUrl?: string | null;
+}
+
 export interface ProductOrder {
   id: number;
   userId: number;
   user?: User;
-  productId: number;
-  product?: Product;
-  productName: string;
-  quantity: number;
-  baseAmount: number;
-  taxAmount: number;
+  orderName: string;
+  items: ProductOrderItem[];
+  totalQuantity: number;
+  itemsAmount: number;
+  couponDiscountAmount: number;
+  shippingFee: number;
+  refundedAmount: number;
   amount: number;
   deliveryAddressId: number;
   deliveryAddress?: DeliveryAddress;
@@ -331,6 +350,7 @@ export interface ProductCouponUsageLog {
   coupon?: ProductCoupon | null;
   order?: {
     id: number;
+    orderName?: string | null;
     productName?: string | null;
     amount?: number | null;
     status?: string;
@@ -356,11 +376,18 @@ export interface ReviewPlan {
   monthlyPrice: number;
 }
 
+export interface ReviewProduct {
+  id: number;
+  name: string;
+}
+
 export interface Review {
   id: number;
   userId: number | null;
-  planId: number;
+  planId: number | null;
+  productId: number | null;
   subscriptionPaymentId: number | null;
+  productOrderId: number | null;
   rating: number;
   content: string;
   imageUrls: string[] | null;
@@ -368,7 +395,8 @@ export interface Review {
   snapshotUserEmail: string | null;
   snapshotPetName: string | null;
   snapshotPetProfileImageUrl: string | null;
-  plan?: ReviewPlan;
+  plan?: ReviewPlan | null;
+  product?: ReviewProduct | null;
   createdAt: string;
   updatedAt: string;
 }

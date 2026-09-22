@@ -13,6 +13,7 @@ import { DeliveryModal } from '@/components/product-orders/DeliveryModal';
 import { CancelOrderModal } from '@/components/product-orders/CancelOrderModal';
 import { RefundOrderModal } from '@/components/product-orders/RefundOrderModal';
 import { ProductOrderDetailModal } from '@/components/product-orders/ProductOrderDetailModal';
+import { PromoListCell } from '@/components/shared/CouponReferralInfo';
 import {
   PAYMENT_STATUS_MAP,
   DELIVERY_STATUS_MAP,
@@ -172,6 +173,7 @@ export function ProductOrderList() {
                   <th className="table-th">주문 ID</th>
                   <th className="table-th">고객</th>
                   <th className="table-th">주문명</th>
+                  <th className="table-th">쿠폰</th>
                   <th className="table-th">수량</th>
                   <th className="table-th">금액</th>
                   <th className="table-th">결제 상태</th>
@@ -202,6 +204,9 @@ export function ProductOrderList() {
                       </td>
                       <td className="table-td">
                         <p className="font-medium text-text-primary">{order.orderName}</p>
+                      </td>
+                      <td className="table-td">
+                        <PromoListCell coupon={order.coupon} />
                       </td>
                       <td className="table-td text-text-secondary">{order.totalQuantity}</td>
                       <td className="table-td">

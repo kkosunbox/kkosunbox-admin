@@ -5,6 +5,10 @@ import { CreditCard, MapPin, User, PauseCircle } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
 import { PetProfileCard } from '@/components/shared/PetProfileCard';
+import {
+  CouponDetailSection,
+  ReferralDetailSection,
+} from '@/components/shared/CouponReferralInfo';
 import { subscriptionsApi } from '@/lib/api';
 import {
   SUBSCRIPTION_STATUS_MAP,
@@ -211,6 +215,9 @@ export function SubscriptionDetailModal({
                 </dl>
               </section>
             )}
+
+            <CouponDetailSection coupon={subscription.coupon} />
+            <ReferralDetailSection referral={subscription.referral} />
 
             {petProfile && (
               <section className="detail-section">

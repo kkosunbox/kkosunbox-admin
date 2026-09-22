@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Pagination } from '@/components/ui/Pagination';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SubscriptionDetailModal } from '@/components/subscriptions/SubscriptionDetailModal';
+import { PromoListCell } from '@/components/shared/CouponReferralInfo';
 import { SUBSCRIPTION_STATUS_MAP, formatCurrency, formatDate, cn } from '@/lib/utils';
 import type { UserSubscription } from '@/types';
 
@@ -77,6 +78,7 @@ export default function SubscriptionsPage() {
                   <th className="table-th">ID</th>
                   <th className="table-th">고객</th>
                   <th className="table-th">플랜</th>
+                  <th className="table-th">쿠폰/초대</th>
                   <th className="table-th">반려견</th>
                   <th className="table-th">상태</th>
                   <th className="table-th">수량</th>
@@ -101,6 +103,9 @@ export default function SubscriptionsPage() {
                       </td>
                       <td className="table-td font-medium text-text-primary">
                         {sub.plan?.name ?? '-'}
+                      </td>
+                      <td className="table-td">
+                        <PromoListCell coupon={sub.coupon} referral={sub.referral} />
                       </td>
                       <td className="table-td text-text-secondary">
                         {sub.petProfile?.name ?? '-'}

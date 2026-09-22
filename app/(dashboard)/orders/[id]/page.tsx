@@ -9,6 +9,10 @@ import { Badge } from '@/components/ui/Badge';
 import { DeliveryModal } from '@/components/orders/DeliveryModal';
 import { PetProfileCard } from '@/components/shared/PetProfileCard';
 import {
+  CouponDetailSection,
+  ReferralDetailSection,
+} from '@/components/shared/CouponReferralInfo';
+import {
   PAYMENT_STATUS_MAP,
   DELIVERY_STATUS_MAP,
   formatCurrency,
@@ -170,6 +174,9 @@ export default function OrderDetailPage() {
               </dl>
             </section>
           )}
+
+          <CouponDetailSection coupon={subscription?.coupon} />
+          <ReferralDetailSection referral={subscription?.referral} />
 
           {/* 반려견 정보 (체크리스트·추천 결과 포함) */}
           {petProfile && (

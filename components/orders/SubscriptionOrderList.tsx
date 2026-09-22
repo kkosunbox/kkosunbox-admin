@@ -19,6 +19,7 @@ import {
   formatDateTime,
   cn,
 } from '@/lib/utils';
+import { PromoListCell } from '@/components/shared/CouponReferralInfo';
 import type { Payment } from '@/types';
 
 const STATUS_FILTERS = [
@@ -144,6 +145,7 @@ export function SubscriptionOrderList() {
                   <th className="table-th">주문 ID</th>
                   <th className="table-th">고객</th>
                   <th className="table-th">플랜</th>
+                  <th className="table-th">쿠폰/초대</th>
                   <th className="table-th">금액</th>
                   <th className="table-th">결제 상태</th>
                   <th className="table-th">배송 상태</th>
@@ -183,6 +185,12 @@ export function SubscriptionOrderList() {
                         <p className="font-medium text-text-primary">
                           {payment.planName ?? payment.subscription?.plan?.name ?? '-'}
                         </p>
+                      </td>
+                      <td className="table-td">
+                        <PromoListCell
+                          coupon={payment.subscription?.coupon}
+                          referral={payment.subscription?.referral}
+                        />
                       </td>
                       <td className="table-td font-semibold text-text-primary">
                         {formatCurrency(payment.amount)}

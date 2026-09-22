@@ -24,8 +24,9 @@ import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { InfluencerProfileModal } from '@/components/influencers/InfluencerProfileModal';
-import { USER_STATUS_MAP, formatCurrency, formatDateTime, cn, formatRewardRatePercent, getSystemReferralRewardRate } from '@/lib/utils';
-import type { InfluencerDetail, InfluencerMonthlySummaryItem, InfluencerSettlement } from '@/types';
+import { PaymentDetailModal } from '@/components/orders/PaymentDetailModal';
+import { USER_STATUS_MAP, formatCurrency, formatDateTime, cn, formatRewardRatePercent, getSystemReferralRewardRate, PAYMENT_STATUS_MAP } from '@/lib/utils';
+import type { InfluencerDetail, InfluencerMonthlySummaryItem, InfluencerPointItem, InfluencerSettlement } from '@/types';
 
 const MONTH_NAMES = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
 const LIMIT = 20;
@@ -52,6 +53,7 @@ export default function InfluencerDetailPage() {
   const [cancelError, setCancelError] = useState('');
   const [copied, setCopied] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [detailPaymentId, setDetailPaymentId] = useState<number | null>(null);
 
   const userId = Number(id);
 
@@ -461,30 +463,71 @@ export default function InfluencerDetailPage() {
               <thead className="border-b border-border bg-surface-muted">
                 <tr>
                   <th className="table-th">ID</th>
-                  <th className="table-th">유형</th>
                   <th className="table-th">포인트</th>
-                  <th className="table-th">설명</th>
-                  <th className="table-th">레퍼럴 코드</th>
+                  <th className="table-th">구매자</th>
+                  <th className="table-th">회차</th>
+                  <th className="table-th">주문</th>
                   <th className="table-th">적립일</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {points.map((point: any) => (
-                  <tr key={point.id}>
-                    <td className="table-td font-mono text-xs text-text-muted">#{point.id}</td>
-                    <td className="table-td">
-                      <Badge label="레퍼럴 보상" color="bg-blue-50 text-blue-600" />
-                    </td>
-                    <td className="table-td font-semibold text-brand-600">
-                      +{formatCurrency(point.amount)}
-                    </td>
-                    <td className="table-td text-text-secondary">{point.description ?? '-'}</td>
-                    <td className="table-td font-mono text-xs text-text-muted">
-                      {point.referralCode ?? '-'}
-                    </td>
-                    <td className="table-td text-text-secondary">{formatDateTime(point.createdAt)}</td>
-                  </tr>
-                ))}
+                {points.map((point: InfluencerPointItem) => {
+                  const order = point.order;
+                  const paymentStatus = order ? PAYMENT_STATUS_MAP[order.status] : null;
+                  const buyerEmail = point.email ?? order?.user?.email;
+                  const buyerName = order?.user?.name;
+
+                  return (
+                    <tr key={point.id}>
+                      <td className="table-td font-mono text-xs text-text-muted">#{point.id}</td>
+                      <td className="table-td font-semibold text-brand-600">
+                        +{formatCurrency(point.amount)}
+                      </td>
+                      <td className="table-td">
+                        {buyerName && (
+                          <p className="text-sm text-text-primary">{buyerName}</p>
+                        )}
+                        <p className={buyerName ? 'text-xs text-text-muted' : 'text-sm text-text-primary'}>
+                          {buyerEmail ?? '-'}
+                        </p>
+                      </td>
+                      <td className="table-td text-text-secondary">
+                        {point.paymentCycle != null ? `${point.paymentCycle}회차` : '-'}
+                      </td>
+                      <td className="table-td">
+                        {order ? (
+                          <button
+                            type="button"
+                            onClick={() => setDetailPaymentId(order.paymentId)}
+                            className="text-left"
+                          >
+                            <p className="font-medium text-text-primary">
+                              {order.planName ?? `주문 #${order.paymentId}`}
+                            </p>
+                            <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                              <span className="text-xs text-text-muted">
+                                {formatCurrency(order.amount)}
+                              </span>
+                              {paymentStatus && (
+                                <Badge label={paymentStatus.label} color={paymentStatus.color} />
+                              )}
+                            </div>
+                            {order.petProfile?.name && (
+                              <p className="text-xs text-text-muted">
+                                {order.petProfile.name}
+                                {order.petProfile.breed ? ` · ${order.petProfile.breed}` : ''}
+                              </p>
+                            )}
+                            <p className="mt-0.5 text-xs font-medium text-brand-500">주문 상세</p>
+                          </button>
+                        ) : (
+                          <span className="text-text-muted">결제 정보 없음</span>
+                        )}
+                      </td>
+                      <td className="table-td text-text-secondary">{formatDateTime(point.createdAt)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -609,6 +652,11 @@ export default function InfluencerDetailPage() {
         initialIsPageVisible={influencerProfile?.isPageVisible ?? true}
         initialRewardRate={influencerProfile?.rewardRate ?? null}
         onClose={() => setShowEditModal(false)}
+      />
+
+      <PaymentDetailModal
+        paymentId={detailPaymentId}
+        onClose={() => setDetailPaymentId(null)}
       />
     </div>
   );

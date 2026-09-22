@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Dog, MapPin, CreditCard, Package, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Bell, Dog, MapPin, CreditCard, Package, TrendingUp } from 'lucide-react';
 import { usersApi, getErrorMessage } from '@/lib/api';
 import { useAuth } from '@/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { PetProfileCard } from '@/components/shared/PetProfileCard';
 import { InfluencerProfileModal } from '@/components/influencers/InfluencerProfileModal';
+import { HolidayDeliveryNoticeForm } from '@/components/alimtalk/HolidayDeliveryNoticeForm';
 import {
   USER_STATUS_MAP,
   SUBSCRIPTION_STATUS_MAP,
@@ -34,6 +35,7 @@ export default function CustomerDetailPage() {
   const isAdmin = admin?.role === 'admin';
 
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showAlimtalkModal, setShowAlimtalkModal] = useState(false);
   const [showInfluencerModal, setShowInfluencerModal] = useState(false);
   const [newStatus, setNewStatus] = useState<UserStatus>('active');
   const [error, setError] = useState('');
@@ -75,6 +77,15 @@ export default function CustomerDetailPage() {
   if (!user) return <div className="text-center py-16 text-text-muted">고객을 찾을 수 없습니다.</div>;
 
   const statusInfo = USER_STATUS_MAP[user.status];
+  const deliveryContacts = (data?.deliveryAddresses ?? [])
+    .filter((addr: { phoneNumber?: string | null }) => Boolean(addr.phoneNumber?.trim()))
+    .map((addr: { id: number; nickname?: string | null; receiverName: string; phoneNumber: string }) => ({
+      id: addr.id,
+      nickname: addr.nickname,
+      receiverName: addr.receiverName,
+      phoneNumber: addr.phoneNumber,
+    }));
+  const canSendAlimtalk = Boolean(user.phone?.trim()) || deliveryContacts.length > 0;
   const isInfluencer = user.isInfluencer === true;
   const influencerProfile = data?.influencerProfile ?? user.influencerProfile ?? null;
   const isReassign = !isInfluencer && Boolean(influencerProfile);
@@ -135,6 +146,17 @@ export default function CustomerDetailPage() {
               >
                 <TrendingUp size={14} />
                 {isReassign ? '인플루언서 재지정' : '인플루언서 지정'}
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                onClick={() => setShowAlimtalkModal(true)}
+                disabled={!canSendAlimtalk}
+                title={canSendAlimtalk ? '배송지연 알림톡 보내기' : '연락처가 없어 발송할 수 없습니다'}
+                className="btn-secondary text-sm"
+              >
+                <Bell size={14} />
+                배송지연 알림톡
               </button>
             )}
             <button
@@ -299,6 +321,27 @@ export default function CustomerDetailPage() {
         initialRewardRate={influencerProfile?.rewardRate ?? null}
         onClose={() => setShowInfluencerModal(false)}
       />
+
+      {isAdmin && (
+      <Modal
+        isOpen={showAlimtalkModal}
+        onClose={() => setShowAlimtalkModal(false)}
+        title="배송지연 알림톡"
+        size="lg"
+      >
+        {canSendAlimtalk ? (
+          <HolidayDeliveryNoticeForm
+            customer={{
+              email: user.email,
+              phone: user.phone,
+              deliveryContacts,
+            }}
+          />
+        ) : (
+          <p className="text-sm text-text-muted">연락처가 없어 발송할 수 없습니다.</p>
+        )}
+      </Modal>
+      )}
 
       {/* Status Modal */}
       <Modal isOpen={showStatusModal} onClose={() => setShowStatusModal(false)} title="고객 상태 변경" size="sm">

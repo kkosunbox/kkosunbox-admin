@@ -10,6 +10,7 @@ import { CancelOrderModal } from '@/components/product-orders/CancelOrderModal';
 import { RefundOrderModal } from '@/components/product-orders/RefundOrderModal';
 import { ProductCouponDetailSection } from '@/components/shared/CouponReferralInfo';
 import { productOrdersApi } from '@/lib/api';
+import { SendDeliveryDelayAlimtalkButton } from '@/components/alimtalk/SendDeliveryDelayAlimtalkButton';
 import { useAuth } from '@/providers/AuthProvider';
 import {
   PAYMENT_STATUS_MAP,
@@ -86,33 +87,44 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                 </div>
               </div>
 
-              {(canDeliver || (isAdmin && (canCancel || canRefund))) && (
-                <div className="mt-4 flex gap-2">
-                  {canDeliver && (
-                    <button onClick={() => setShowDeliveryModal(true)} className="btn-primary flex-1">
-                      <Truck size={15} />
-                      배송 처리하기
-                    </button>
-                  )}
-                  {isAdmin && canCancel && (
-                    <button
-                      onClick={() => setShowCancelModal(true)}
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-red-500 backdrop-blur-sm transition-colors hover:bg-red-50 hover:text-red-600"
-                    >
-                      <XCircle size={15} />
-                      결제 취소
-                    </button>
-                  )}
-                  {isAdmin && canRefund && (
-                    <button
-                      onClick={() => setShowRefundModal(true)}
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-amber-600 backdrop-blur-sm transition-colors hover:bg-amber-50 hover:text-amber-700"
-                    >
-                      <Undo2 size={15} />
-                      강제 환불
-                    </button>
-                  )}
-                </div>
+              {(canDeliver || isAdmin) && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {canDeliver && (
+                  <button onClick={() => setShowDeliveryModal(true)} className="btn-primary flex-1">
+                    <Truck size={15} />
+                    배송 처리하기
+                  </button>
+                )}
+                {isAdmin && canCancel && (
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-red-500 backdrop-blur-sm transition-colors hover:bg-red-50 hover:text-red-600"
+                  >
+                    <XCircle size={15} />
+                    결제 취소
+                  </button>
+                )}
+                {isAdmin && canRefund && (
+                  <button
+                    onClick={() => setShowRefundModal(true)}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-amber-600 backdrop-blur-sm transition-colors hover:bg-amber-50 hover:text-amber-700"
+                  >
+                    <Undo2 size={15} />
+                    강제 환불
+                  </button>
+                )}
+                {isAdmin && (
+                <SendDeliveryDelayAlimtalkButton
+                  phone={deliveryAddress?.phoneNumber}
+                  email={order.user?.email}
+                  label={
+                    deliveryAddress
+                      ? `${deliveryAddress.receiverName}${deliveryAddress.nickname ? ` (${deliveryAddress.nickname})` : ''}`
+                      : undefined
+                  }
+                />
+                )}
+              </div>
               )}
             </div>
 

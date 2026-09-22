@@ -14,6 +14,7 @@ import {
   ReferralDetailSection,
 } from '@/components/shared/CouponReferralInfo';
 import { ordersApi } from '@/lib/api';
+import { SendDeliveryDelayAlimtalkButton } from '@/components/alimtalk/SendDeliveryDelayAlimtalkButton';
 import { useAuth } from '@/providers/AuthProvider';
 import {
   PAYMENT_STATUS_MAP,
@@ -100,9 +101,10 @@ export function PaymentDetailModal({ paymentId, onClose }: PaymentDetailModalPro
                 </div>
               </div>
 
-              {/* Actions */}
-              {(canDeliver || (isAdmin && (canCancel || canRefund))) && (
-                <div className="mt-4 flex gap-2">
+              {(canDeliver || isAdmin) && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {(canDeliver || (isAdmin && (canCancel || canRefund))) && (
+                <>
                   {canDeliver && (
                     <button
                       onClick={() => setShowDeliveryModal(true)}
@@ -130,7 +132,20 @@ export function PaymentDetailModal({ paymentId, onClose }: PaymentDetailModalPro
                       환불
                     </button>
                   )}
-                </div>
+                </>
+                )}
+                {isAdmin && (
+                <SendDeliveryDelayAlimtalkButton
+                  phone={deliveryAddress?.phoneNumber}
+                  email={subscription?.user?.email}
+                  label={
+                    deliveryAddress
+                      ? `${deliveryAddress.receiverName}${deliveryAddress.nickname ? ` (${deliveryAddress.nickname})` : ''}`
+                      : undefined
+                  }
+                />
+                )}
+              </div>
               )}
             </div>
 

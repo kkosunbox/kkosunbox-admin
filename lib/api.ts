@@ -231,6 +231,24 @@ export const usersApi = {
       .then((r) => r.data.data),
 };
 
+// ─── Alimtalk ─────────────────────────────────────────────────────────────────
+
+export interface HolidayDeliveryNoticePayload {
+  holidayName: string;
+  holidayStartDate: string;
+  holidayEndDate: string;
+  resumeDate: string;
+  sendToAllUsers: boolean;
+  phoneNumbers?: string[];
+}
+
+export const alimtalkApi = {
+  sendHolidayDeliveryNotice: (data: HolidayDeliveryNoticePayload) =>
+    apiClient
+      .post('/admin/alimtalk/holiday-delivery-notice', data, { timeout: 120000 })
+      .then((r) => r.data.data),
+};
+
 // ─── Assets ───────────────────────────────────────────────────────────────────
 
 export interface PresignedUrlResult {

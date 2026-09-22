@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Truck, Package, MapPin, User } from 'lucide-react';
 import { ordersApi } from '@/lib/api';
+import { SendDeliveryDelayAlimtalkButton } from '@/components/alimtalk/SendDeliveryDelayAlimtalkButton';
+import { useAuth } from '@/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
 import { DeliveryModal } from '@/components/orders/DeliveryModal';
 import { PetProfileCard } from '@/components/shared/PetProfileCard';
@@ -24,6 +26,8 @@ import type { Payment } from '@/types';
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { admin } = useAuth();
+  const isAdmin = admin?.role === 'admin';
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
 
   const { data: payment, isLoading } = useQuery<Payment>({
@@ -92,14 +96,27 @@ export default function OrderDetailPage() {
           </div>
         </div>
 
-        {canDeliver && (
-          <button
-            onClick={() => setShowDeliveryModal(true)}
-            className="btn-primary mt-4"
-          >
-            <Truck size={16} />
-            배송 처리하기
-          </button>
+        {(canDeliver || isAdmin) && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {canDeliver && (
+            <button
+              onClick={() => setShowDeliveryModal(true)}
+              className="btn-primary"
+            >
+              <Truck size={16} />
+              배송 처리하기
+            </button>
+          )}
+          <SendDeliveryDelayAlimtalkButton
+            phone={deliveryAddress?.phoneNumber}
+            email={subscription?.user?.email}
+            label={
+              deliveryAddress
+                ? `${deliveryAddress.receiverName}${deliveryAddress.nickname ? ` (${deliveryAddress.nickname})` : ''}`
+                : undefined
+            }
+          />
+        </div>
         )}
       </div>
 

@@ -278,10 +278,18 @@ export interface ProductOrder {
 
 export type UserStatus = 'active' | 'inactive' | 'suspended';
 
+export interface DeliveryContact {
+  id: number;
+  nickname?: string | null;
+  receiverName: string;
+  phoneNumber: string;
+}
+
 export interface User {
   id: number;
   email: string;
   phone?: string | null;
+  deliveryContacts?: DeliveryContact[];
   status: UserStatus;
   isAllowTerms: boolean;
   isAllowPrivacy: boolean;

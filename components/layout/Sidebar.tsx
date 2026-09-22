@@ -19,6 +19,7 @@ import {
   Settings,
   LogOut,
   TrendingUp,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/AuthProvider";
@@ -40,6 +41,7 @@ const NAV_GROUPS: { label?: string; items: NavItem[] }[] = [
       { label: "구독 주문", href: "/orders", icon: ShoppingBag },
       { label: "단건 주문", href: "/product-orders", icon: ShoppingCart },
       { label: "고객 관리", href: "/customers", icon: Users, adminOnly: true },
+      { label: "알림톡", href: "/alimtalk", icon: Bell, adminOnly: true },
       {
         label: "문의 관리",
         href: "/inquiries",

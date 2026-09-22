@@ -475,6 +475,7 @@ export function HolidayDeliveryNoticeForm({
                   {selected.length}
                 </span>
                 개 · 회원 연락처와 배송지 연락처를 각각 고를 수 있습니다.
+                (중복되어도 한건만 발송)
               </p>
 
               <div className="search-wrapper">

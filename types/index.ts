@@ -196,11 +196,23 @@ export interface Payment {
 
 // ─── Product (단건 판매) ─────────────────────────────────────────────────────
 
+export interface ProductCategory {
+  id: number;
+  name: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Product {
   id: number;
   name: string;
   description?: string | null;
   price: number;
+  originalPrice?: number | null;
+  categoryId?: number | null;
+  category?: ProductCategory | null;
   imageUrl?: string | null;
   isActive: boolean;
   isSalesPaused?: boolean;

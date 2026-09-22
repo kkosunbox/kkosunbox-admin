@@ -38,6 +38,7 @@ const ERROR_CODE_MESSAGES: Record<string, string> = {
   INVALID_FILE_FORMAT: 'jpg, jpeg, png, webp 파일만 업로드할 수 있습니다.',
   PAYMENT_CANCELLATION_NOT_ALLOWED:
     '부분 취소 후 발생하는 배송비가 취소 금액보다 크거나 같습니다. 전액 취소를 이용해주세요.',
+  PRODUCT_CATEGORY_NOT_FOUND: '존재하지 않는 카테고리입니다.',
 };
 
 export function getErrorMessage(error: unknown): string {
@@ -133,6 +134,8 @@ export const productsApi = {
     name: string;
     description?: string;
     price: number;
+    originalPrice?: number | null;
+    categoryId?: number | null;
     imageUrl?: string;
     relatedPlanId?: number | null;
     stockQuantity?: number | null;
@@ -144,6 +147,8 @@ export const productsApi = {
       name: string;
       description: string;
       price: number;
+      originalPrice: number | null;
+      categoryId: number | null;
       imageUrl: string;
       isActive: boolean;
       isSalesPaused: boolean;
@@ -151,6 +156,27 @@ export const productsApi = {
       stockQuantity: number | null;
     }>,
   ) => apiClient.patch(`/admin/products/${id}`, data).then((r) => r.data.data),
+};
+
+// ─── Product Categories ──────────────────────────────────────────────────────
+
+export const productCategoriesApi = {
+  getList: () =>
+    apiClient.get('/admin/product-categories').then((r) => r.data.data),
+
+  create: (data: { name: string; sortOrder?: number }) =>
+    apiClient.post('/admin/product-categories', data).then((r) => r.data.data),
+
+  update: (
+    id: number,
+    data: Partial<{ name: string; sortOrder: number; isActive: boolean }>,
+  ) =>
+    apiClient
+      .patch(`/admin/product-categories/${id}`, data)
+      .then((r) => r.data.data),
+
+  delete: (id: number) =>
+    apiClient.delete(`/admin/product-categories/${id}`).then((r) => r.data.data),
 };
 
 // ─── Product Orders (단건 판매 주문) ─────────────────────────────────────────────

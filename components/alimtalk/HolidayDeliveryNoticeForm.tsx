@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Search, X } from "lucide-react";
+import { Search } from "lucide-react";
 import { alimtalkApi, getErrorMessage, usersApi } from "@/lib/api";
 import { FormField } from "@/components/ui/FormField";
 import { Pagination } from "@/components/ui/Pagination";
@@ -11,6 +11,7 @@ import {
   buildContactOptions,
   type AlimtalkContactOption,
 } from "@/components/alimtalk/contactOptions";
+import { HolidayDeliveryNoticePreview } from "@/components/alimtalk/HolidayDeliveryNoticePreview";
 import { USER_STATUS_MAP, cn } from "@/lib/utils";
 import type { DeliveryContact, User } from "@/types";
 
@@ -62,6 +63,64 @@ function formatSendResult(result: unknown): string {
     return `${sent.toLocaleString()}건 발송을 요청했습니다.`;
   if (typeof data.message === "string" && data.message) return data.message;
   return "알림톡 발송을 요청했습니다.";
+}
+
+function SelectAllToggle({
+  label,
+  targets,
+  selected,
+  onChange,
+}: {
+  label: string;
+  targets: SelectedContact[];
+  selected: SelectedContact[];
+  onChange: (next: SelectedContact[]) => void;
+}) {
+  if (targets.length === 0) return null;
+
+  const selectedCount = targets.filter((item) =>
+    selected.some((current) => current.key === item.key),
+  ).length;
+  const allChecked = selectedCount === targets.length;
+
+  function toggle() {
+    if (allChecked) {
+      const keys = new Set(targets.map((item) => item.key));
+      onChange(selected.filter((item) => !keys.has(item.key)));
+      return;
+    }
+    const existing = new Set(selected.map((item) => item.key));
+    onChange([
+      ...selected,
+      ...targets.filter((item) => !existing.has(item.key)),
+    ]);
+  }
+
+  return (
+    <label className="flex cursor-pointer items-center gap-2">
+      <input
+        type="checkbox"
+        checked={allChecked}
+        ref={(element) => {
+          if (element) element.indeterminate = selectedCount > 0 && !allChecked;
+        }}
+        onChange={toggle}
+        className="h-4 w-4 rounded border-border text-brand-500"
+      />
+      <span className="text-xs font-medium text-text-primary">{label}</span>
+    </label>
+  );
+}
+
+function contactsFromUser(user: User): SelectedContact[] {
+  return buildContactOptions(user.id, user.phone, user.deliveryContacts).map(
+    (option) => ({
+      key: option.key,
+      email: user.email,
+      phone: option.phone,
+      label: option.label,
+    }),
+  );
 }
 
 function ContactChecks({
@@ -203,6 +262,11 @@ export function HolidayDeliveryNoticeForm({
     setSuccess("");
   }
 
+  function replaceSelected(next: SelectedContact[]) {
+    setSelected(next);
+    setSuccess("");
+  }
+
   function validate(): string | null {
     if (!fields.holidayName.trim()) return "연휴명을 입력해주세요.";
     if (!fields.holidayStartDate.trim()) return "시작일을 입력해주세요.";
@@ -241,15 +305,21 @@ export function HolidayDeliveryNoticeForm({
   if (confirming) {
     return (
       <div className="space-y-4">
-        <div className="rounded-2xl bg-surface-muted px-4 py-4 text-sm">
-          <p className="font-semibold text-text-primary">
-            이 내용으로 발송합니다
+        <div>
+          <p className="text-sm font-semibold text-text-primary">
+            발송 전 미리보기
           </p>
-          <dl className="mt-3 space-y-2">
-            <SummaryRow label="연휴명" value={fields.holidayName.trim()} />
-            <SummaryRow label="시작일" value={fields.holidayStartDate.trim()} />
-            <SummaryRow label="종료일" value={fields.holidayEndDate.trim()} />
-            <SummaryRow label="배송 재개일" value={fields.resumeDate.trim()} />
+          <div className="mt-3">
+            <HolidayDeliveryNoticePreview
+              holidayName={fields.holidayName.trim()}
+              holidayStartDate={fields.holidayStartDate.trim()}
+              holidayEndDate={fields.holidayEndDate.trim()}
+              resumeDate={fields.resumeDate.trim()}
+            />
+          </div>
+        </div>
+        <div className="rounded-2xl bg-surface-muted px-4 py-4 text-sm">
+          <dl className="space-y-2">
             <SummaryRow label="수신" value={recipientSummary} />
           </dl>
           {!fixedRecipient && (customer || mode === "selected") && (
@@ -348,6 +418,19 @@ export function HolidayDeliveryNoticeForm({
           <p className="mt-0.5 truncate text-sm font-medium text-text-primary">
             {customer.email}
           </p>
+          <div className="mt-2">
+            <SelectAllToggle
+              label="전체 선택"
+              targets={customerOptions.map((option) => ({
+                key: option.key,
+                email: customer.email,
+                phone: option.phone,
+                label: option.label,
+              }))}
+              selected={selected}
+              onChange={replaceSelected}
+            />
+          </div>
           <ContactChecks
             options={customerOptions}
             email={customer.email}
@@ -386,28 +469,6 @@ export function HolidayDeliveryNoticeForm({
             </p>
           ) : (
             <div className="space-y-3">
-              {selected.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {selected.map((item) => (
-                    <button
-                      key={item.key}
-                      type="button"
-                      onClick={() =>
-                        setSelected((prev) =>
-                          prev.filter((current) => current.key !== item.key),
-                        )
-                      }
-                      className="inline-flex max-w-full items-center gap-1 rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700"
-                    >
-                      <span className="truncate">
-                        {item.email} · {item.label}
-                      </span>
-                      <X size={12} className="shrink-0" />
-                    </button>
-                  ))}
-                </div>
-              )}
-
               <p className="text-xs text-text-muted">
                 선택{" "}
                 <span className="font-semibold text-text-primary">
@@ -442,6 +503,14 @@ export function HolidayDeliveryNoticeForm({
                   </p>
                 ) : (
                   <ul className="divide-y divide-border-light">
+                    <li className="bg-surface-muted/60 px-3 py-2.5">
+                      <SelectAllToggle
+                        label="이 페이지 전체 선택"
+                        targets={users.flatMap(contactsFromUser)}
+                        selected={selected}
+                        onChange={replaceSelected}
+                      />
+                    </li>
                     {users.map((user) => {
                       const options = buildContactOptions(
                         user.id,

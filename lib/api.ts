@@ -268,11 +268,47 @@ export interface HolidayDeliveryNoticePayload {
   phoneNumbers?: string[];
 }
 
+export interface AlimtalkLog {
+  id: number;
+  templateType: string;
+  holidayName: string;
+  holidayStartDate: string;
+  holidayEndDate: string;
+  resumeDate: string;
+  sendToAllUsers: boolean;
+  recipientCount: number;
+  successCount: number;
+  failureCount: number;
+  errorMessage: string | null;
+  createdAt: string;
+  admin: { id: number; name: string };
+}
+
+export interface AlimtalkLogDetail extends AlimtalkLog {
+  phoneNumbers: string[];
+  invalidPhoneNumbers: string[];
+}
+
+export interface AlimtalkLogList {
+  items: AlimtalkLog[];
+  total: number;
+}
+
 export const alimtalkApi = {
   sendHolidayDeliveryNotice: (data: HolidayDeliveryNoticePayload) =>
     apiClient
       .post('/admin/alimtalk/holiday-delivery-notice', data, { timeout: 120000 })
       .then((r) => r.data.data),
+
+  getLogs: (params?: { page?: number; limit?: number }) =>
+    apiClient
+      .get('/admin/alimtalk/logs', { params })
+      .then((r) => r.data.data as AlimtalkLogList),
+
+  getLog: (id: number) =>
+    apiClient
+      .get(`/admin/alimtalk/logs/${id}`)
+      .then((r) => r.data.data as AlimtalkLogDetail),
 };
 
 // ─── Assets ───────────────────────────────────────────────────────────────────

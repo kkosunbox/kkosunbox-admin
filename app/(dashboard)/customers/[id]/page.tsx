@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { PetProfileCard } from '@/components/shared/PetProfileCard';
 import { InfluencerProfileModal } from '@/components/influencers/InfluencerProfileModal';
-import { HolidayDeliveryNoticeForm } from '@/components/alimtalk/HolidayDeliveryNoticeForm';
+import { AlimtalkComposer } from '@/components/alimtalk/AlimtalkComposer';
 import {
   USER_STATUS_MAP,
   SUBSCRIPTION_STATUS_MAP,
@@ -152,11 +152,11 @@ export default function CustomerDetailPage() {
               <button
                 onClick={() => setShowAlimtalkModal(true)}
                 disabled={!canSendAlimtalk}
-                title={canSendAlimtalk ? '배송지연 알림톡 보내기' : '연락처가 없어 발송할 수 없습니다'}
+                title={canSendAlimtalk ? '알림톡 보내기' : '연락처가 없어 발송할 수 없습니다'}
                 className="btn-secondary text-sm"
               >
                 <Bell size={14} />
-                배송지연 알림톡
+                알림톡
               </button>
             )}
             <button
@@ -326,11 +326,12 @@ export default function CustomerDetailPage() {
       <Modal
         isOpen={showAlimtalkModal}
         onClose={() => setShowAlimtalkModal(false)}
-        title="배송지연 알림톡"
-        size="lg"
+        title="알림톡"
+        size="xl"
       >
         {canSendAlimtalk ? (
-          <HolidayDeliveryNoticeForm
+          <AlimtalkComposer
+            layout="modal"
             customer={{
               email: user.email,
               phone: user.phone,

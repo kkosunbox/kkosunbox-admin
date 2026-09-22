@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { DeliveryModal } from '@/components/product-orders/DeliveryModal';
 import { CancelOrderModal } from '@/components/product-orders/CancelOrderModal';
 import { RefundOrderModal } from '@/components/product-orders/RefundOrderModal';
+import { ProductCouponDetailSection } from '@/components/shared/CouponReferralInfo';
 import { productOrdersApi } from '@/lib/api';
 import { useAuth } from '@/providers/AuthProvider';
 import {
@@ -277,6 +278,8 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                 </div>
               </section>
 
+              <ProductCouponDetailSection coupon={order.coupon} />
+
               <section className="detail-section">
                 <div className="detail-section-label">
                   <Package size={13} className="text-brand-400" />
@@ -289,7 +292,10 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                   </div>
                   {order.couponDiscountAmount > 0 && (
                     <div className="detail-row">
-                      <dt className="text-text-muted">쿠폰 할인</dt>
+                      <dt className="text-text-muted">
+                        쿠폰 할인
+                        {order.coupon?.code ? ` (${order.coupon.code})` : ''}
+                      </dt>
                       <dd className="font-medium text-text-primary">
                         -{formatCurrency(order.couponDiscountAmount)}
                       </dd>

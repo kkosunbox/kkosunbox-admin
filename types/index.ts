@@ -114,6 +114,37 @@ export interface SubscriptionPlan {
   updatedAt: string;
 }
 
+export interface AppliedCoupon {
+  id: number;
+  code: string;
+  name?: string | null;
+  description?: string | null;
+  discountType?: CouponDiscountType;
+  discountRate?: number | null;
+  discountAmount?: number | null;
+  applyCount?: number;
+  isActive?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SubscriptionReferral {
+  code: string;
+  displayName?: string | null;
+  influencerUserId?: number | null;
+  influencerEmail?: string | null;
+  phone?: string | null;
+  slug?: string | null;
+  profileImageUrl?: string | null;
+  discountRate?: number | null;
+  rewardRate?: number | null;
+  isActive?: boolean;
+  isPageVisible?: boolean;
+  referralLink?: string | null;
+}
+
 export interface UserSubscription {
   id: number;
   userId: number;
@@ -131,6 +162,8 @@ export interface UserSubscription {
   petProfile?: PetProfile;
   deliveryAddress?: DeliveryAddress;
   user?: User;
+  coupon?: AppliedCoupon | null;
+  referral?: SubscriptionReferral | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -197,6 +230,20 @@ export interface ProductOrderItem {
   imageUrl?: string | null;
 }
 
+export interface AppliedProductCoupon {
+  id: number;
+  code: string;
+  name?: string | null;
+  description?: string | null;
+  discountRate?: number | null;
+  maxDiscountAmount?: number | null;
+  isActive?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ProductOrder {
   id: number;
   userId: number;
@@ -205,7 +252,9 @@ export interface ProductOrder {
   items: ProductOrderItem[];
   totalQuantity: number;
   itemsAmount: number;
+  couponId?: number | null;
   couponDiscountAmount: number;
+  coupon?: AppliedProductCoupon | null;
   shippingFee: number;
   refundedAmount: number;
   amount: number;
@@ -438,6 +487,50 @@ export interface InfluencerMonthlySummary {
   items: InfluencerMonthlySummaryItem[];
 }
 
+export interface InfluencerPointOrderUser {
+  id: number;
+  email: string;
+  phone?: string | null;
+  name?: string | null;
+}
+
+export interface InfluencerPointOrderAddress {
+  receiverName?: string | null;
+  phoneNumber?: string | null;
+  zipCode?: string | null;
+  address?: string | null;
+  addressDetail?: string | null;
+}
+
+export interface InfluencerPointOrderPet {
+  id: number;
+  name?: string | null;
+  breed?: string | null;
+}
+
+export interface InfluencerPointOrder {
+  paymentId: number;
+  orderId?: string | null;
+  planName?: string | null;
+  planSlug?: string | null;
+  planImageUrl?: string | null;
+  amount: number;
+  baseAmount?: number | null;
+  taxAmount?: number | null;
+  status: PaymentStatus;
+  paymentType?: PaymentType | null;
+  method?: string | null;
+  approvedAt?: string | null;
+  deliveryStatus?: DeliveryStatus | null;
+  trackingNumber?: string | null;
+  deliveredAt?: string | null;
+  cancelledAt?: string | null;
+  subscriptionId?: number | null;
+  user?: InfluencerPointOrderUser | null;
+  deliveryAddress?: InfluencerPointOrderAddress | null;
+  petProfile?: InfluencerPointOrderPet | null;
+}
+
 export interface InfluencerPointItem {
   id: number;
   userId: number;
@@ -446,6 +539,9 @@ export interface InfluencerPointItem {
   description: string | null;
   referenceId: number | null;
   referralCode: string | null;
+  email?: string | null;
+  paymentCycle?: number | null;
+  order?: InfluencerPointOrder | null;
   expiresAt: string | null;
   createdAt: string;
 }

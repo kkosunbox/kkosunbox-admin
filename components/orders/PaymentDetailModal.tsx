@@ -9,6 +9,10 @@ import { DeliveryModal } from '@/components/orders/DeliveryModal';
 import { CancelPaymentModal } from '@/components/orders/CancelPaymentModal';
 import { RefundPaymentModal } from '@/components/orders/RefundPaymentModal';
 import { PetProfileCard } from '@/components/shared/PetProfileCard';
+import {
+  CouponDetailSection,
+  ReferralDetailSection,
+} from '@/components/shared/CouponReferralInfo';
 import { ordersApi } from '@/lib/api';
 import { useAuth } from '@/providers/AuthProvider';
 import {
@@ -219,11 +223,14 @@ export function PaymentDetailModal({ paymentId, onClose }: PaymentDetailModalPro
                         </dd>
                       </div>
                     )}
-                  </dl>
-                </section>
-              )}
+                </dl>
+              </section>
+            )}
 
-              {petProfile && (
+            <CouponDetailSection coupon={subscription?.coupon} />
+            <ReferralDetailSection referral={subscription?.referral} />
+
+            {petProfile && (
                 <section className="detail-section">
                   <PetProfileCard petProfile={petProfile} />
                 </section>

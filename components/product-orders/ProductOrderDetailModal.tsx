@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Truck, Package, MapPin, User, XCircle, Undo2 } from 'lucide-react';
+import { Truck, Package, MapPin, User, XCircle, Undo2, RotateCcw } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
+import { ProductOrderCustomer } from '@/components/product-orders/ProductOrderCustomer';
 import { DeliveryModal } from '@/components/product-orders/DeliveryModal';
 import { CancelOrderModal } from '@/components/product-orders/CancelOrderModal';
 import { RefundOrderModal } from '@/components/product-orders/RefundOrderModal';
@@ -21,6 +22,11 @@ import {
   canDeliverProductOrder,
   canRefundProductOrder,
   getKoreaPostTrackingUrl,
+  getProductOrderShipping,
+  isGuestProductOrder,
+  formatPhone,
+  remainingItemQuantity,
+  cn,
 } from '@/lib/utils';
 import type { ProductOrder } from '@/types';
 
@@ -44,7 +50,8 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
 
   const paymentStatus = order ? PAYMENT_STATUS_MAP[order.status] : null;
   const deliveryStatusInfo = order?.deliveryStatus ? DELIVERY_STATUS_MAP[order.deliveryStatus] : null;
-  const deliveryAddress = order?.deliveryAddress;
+  const shipping = order ? getProductOrderShipping(order) : null;
+  const refundSummary = order ? summarizeRefund(order) : null;
   const canDeliver = !!order && canDeliverProductOrder(order);
   const canCancel = !!order && canCancelProductOrder(order);
   const canRefund = !!order && canRefundProductOrder(order);
@@ -72,15 +79,15 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                   <p className="text-lg font-bold leading-tight text-text-primary">
                     {order.orderName}
                   </p>
-                  <p className="mt-0.5 text-sm text-text-muted">{order.user?.email ?? '-'}</p>
+                  <ProductOrderCustomer order={order} className="mt-0.5 text-sm text-text-muted" />
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold tracking-tight text-brand-600">
                     {formatCurrency(order.amount)}
                   </p>
                   {order.refundedAmount > 0 && (
-                    <p className="text-xs text-text-muted">
-                      환불 {formatCurrency(order.refundedAmount)}
+                    <p className="text-sm font-semibold text-red-600">
+                      환불 -{formatCurrency(order.refundedAmount)}
                     </p>
                   )}
                   <p className="text-xs text-text-muted">{formatDateTime(order.approvedAt)}</p>
@@ -115,11 +122,11 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                 )}
                 {isAdmin && (
                 <SendDeliveryDelayAlimtalkButton
-                  phone={deliveryAddress?.phoneNumber}
+                  phone={shipping?.phoneNumber ?? order.ordererPhone ?? undefined}
                   email={order.user?.email}
                   label={
-                    deliveryAddress
-                      ? `${deliveryAddress.receiverName}${deliveryAddress.nickname ? ` (${deliveryAddress.nickname})` : ''}`
+                    shipping
+                      ? `${shipping.receiverName}${shipping.nickname ? ` (${shipping.nickname})` : ''}`
                       : undefined
                   }
                 />
@@ -142,20 +149,46 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
               </div>
             )}
 
-            {(order.status === 'refunded' || order.status === 'partially_refunded') &&
-              order.cancelledAt && (
-              <div className="detail-callout bg-gray-50">
-                <div className="detail-callout-icon">
-                  <XCircle size={16} className="text-gray-500" />
+            {refundSummary && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="detail-callout-icon">
+                    <RotateCcw size={16} className="text-red-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-red-700">
+                      {refundSummary.isFull ? '전액 환불된 주문입니다' : '일부 상품이 취소(환불)된 주문입니다'}
+                    </p>
+                    <p className="text-xs text-red-600">
+                      환불 {refundSummary.refundedQuantity}개 · -{formatCurrency(order.refundedAmount)}
+                      {refundSummary.lastRefundedAt &&
+                        ` · ${formatDateTime(refundSummary.lastRefundedAt)}`}
+                    </p>
+                  </div>
+                  {!refundSummary.isFull && (
+                    <div className="shrink-0 text-right">
+                      <p className="text-[11px] text-red-600">남은 금액</p>
+                      <p className="text-sm font-bold text-red-700">
+                        {formatCurrency(order.amount - order.refundedAmount)}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500">
-                    {order.status === 'refunded' ? '전액 환불 처리됨' : '부분 환불 처리됨'}
-                  </p>
-                  <p className="text-sm font-semibold text-gray-800">
-                    {formatDateTime(order.cancelledAt)}
-                  </p>
-                </div>
+                {refundSummary.items.length > 0 && (
+                  <ul className="mt-2.5 space-y-1 border-t border-red-200 pt-2.5 text-xs">
+                    {refundSummary.items.map((item) => (
+                      <li key={item.id} className="flex justify-between gap-3 text-red-700">
+                        <span className="truncate">
+                          {item.productName}{' '}
+                          <span className="font-semibold">
+                            {item.refundedQuantity}/{item.quantity}개 취소
+                          </span>
+                        </span>
+                        <span className="shrink-0 font-medium">-{formatCurrency(item.refundedAmount)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
 
@@ -208,28 +241,48 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
             )}
 
             <div className="detail-sections">
-              {order.user && (
-                <section className="detail-section">
-                  <div className="detail-section-label">
-                    <User size={13} className="text-brand-400" />
-                    고객 정보
-                  </div>
-                  <dl className="space-y-1.5">
-                    <div className="detail-row">
-                      <dt className="shrink-0 text-text-muted">이메일</dt>
-                      <dd className="truncate font-medium text-text-primary">{order.user.email}</dd>
-                    </div>
-                    {order.user.phone && (
+              <section className="detail-section">
+                <div className="detail-section-label">
+                  <User size={13} className="text-brand-400" />
+                  고객 정보
+                  {isGuestProductOrder(order) && (
+                    <Badge label="비회원" color="bg-purple-100 text-purple-800" />
+                  )}
+                </div>
+                <dl className="space-y-1.5">
+                  {order.user ? (
+                    <>
+                      <div className="detail-row">
+                        <dt className="shrink-0 text-text-muted">이메일</dt>
+                        <dd className="truncate font-medium text-text-primary">{order.user.email}</dd>
+                      </div>
+                      {order.user.phone && (
+                        <div className="detail-row">
+                          <dt className="shrink-0 text-text-muted">연락처</dt>
+                          <dd className="font-medium text-text-primary">{order.user.phone}</dd>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="detail-row">
+                        <dt className="shrink-0 text-text-muted">주문자</dt>
+                        <dd className="truncate font-medium text-text-primary">
+                          {order.ordererName ?? '-'}
+                        </dd>
+                      </div>
                       <div className="detail-row">
                         <dt className="shrink-0 text-text-muted">연락처</dt>
-                        <dd className="font-medium text-text-primary">{order.user.phone}</dd>
+                        <dd className="font-medium text-text-primary">
+                          {formatPhone(order.ordererPhone)}
+                        </dd>
                       </div>
-                    )}
-                  </dl>
-                </section>
-              )}
+                    </>
+                  )}
+                </dl>
+              </section>
 
-              {deliveryAddress && (
+              {shipping && (
                 <section className="detail-section">
                   <div className="detail-section-label">
                     <MapPin size={13} className="text-brand-400" />
@@ -237,20 +290,20 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                   </div>
                   <div className="space-y-0.5 text-sm">
                     <p className="font-semibold text-text-primary">
-                      {deliveryAddress.receiverName}
-                      {deliveryAddress.nickname && (
+                      {shipping.receiverName}
+                      {shipping.nickname && (
                         <span className="ml-1.5 text-xs font-normal text-text-muted">
-                          ({deliveryAddress.nickname})
+                          ({shipping.nickname})
                         </span>
                       )}
                     </p>
-                    <p className="text-text-secondary">{deliveryAddress.phoneNumber}</p>
+                    <p className="text-text-secondary">{formatPhone(shipping.phoneNumber)}</p>
                     <p className="text-text-secondary">
-                      [{deliveryAddress.zipCode}] {deliveryAddress.address}
-                      {deliveryAddress.addressDetail && ` ${deliveryAddress.addressDetail}`}
+                      [{shipping.zipCode}] {shipping.address}
+                      {shipping.addressDetail && ` ${shipping.addressDetail}`}
                     </p>
-                    {deliveryAddress.memo && (
-                      <p className="text-xs text-text-muted">메모: {deliveryAddress.memo}</p>
+                    {shipping.memo && (
+                      <p className="text-xs text-text-muted">메모: {shipping.memo}</p>
                     )}
                   </div>
                 </section>
@@ -262,31 +315,81 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                   주문 상품
                 </div>
                 <div className="space-y-2">
-                  {(order.items ?? []).map((item) => (
-                    <div key={item.id} className="flex items-start justify-between gap-3 text-sm">
-                      <div className="flex min-w-0 items-start gap-2.5">
-                        {item.imageUrl && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={item.imageUrl}
-                            alt={item.productName}
-                            className="h-10 w-10 shrink-0 rounded-lg object-cover"
-                          />
+                  {(order.items ?? []).map((item) => {
+                    const remaining = remainingItemQuantity(item);
+                    const isFullyRefunded = item.refundedQuantity > 0 && remaining === 0;
+                    const isPartiallyRefunded = item.refundedQuantity > 0 && remaining > 0;
+                    return (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          'flex items-start justify-between gap-3 text-sm',
+                          item.refundedQuantity > 0 &&
+                            '-mx-2 rounded-xl border-l-4 border-red-400 bg-red-50/60 px-2 py-1.5',
                         )}
-                        <div className="min-w-0">
-                          <p className="font-medium text-text-primary">{item.productName}</p>
-                          <p className="text-xs text-text-muted">
-                            단가 {formatCurrency(item.unitPrice)} · 수량 {item.quantity}
-                            {item.refundedQuantity > 0 && ` · 환불 ${item.refundedQuantity}개`}
+                      >
+                        <div className="flex min-w-0 items-start gap-2.5">
+                          {item.imageUrl && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={item.imageUrl}
+                              alt={item.productName}
+                              className={cn(
+                                'h-10 w-10 shrink-0 rounded-lg object-cover',
+                                isFullyRefunded && 'opacity-40 grayscale',
+                              )}
+                            />
+                          )}
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <p
+                                className={cn(
+                                  'font-medium text-text-primary',
+                                  isFullyRefunded && 'text-text-muted line-through',
+                                )}
+                              >
+                                {item.productName}
+                              </p>
+                              {isFullyRefunded && (
+                                <Badge label="전체 취소" color="bg-red-100 text-red-700" />
+                              )}
+                              {isPartiallyRefunded && (
+                                <Badge
+                                  label={`${item.refundedQuantity}개 취소`}
+                                  color="bg-red-100 text-red-700"
+                                />
+                              )}
+                            </div>
+                            <p className="text-xs text-text-muted">
+                              단가 {formatCurrency(item.unitPrice)} · 수량 {item.quantity}
+                            </p>
+                            {item.refundedQuantity > 0 && (
+                              <p className="text-xs font-semibold text-red-600">
+                                취소 {item.refundedQuantity}개 · 남은 수량 {remaining}개
+                                {item.refundedAt && ` · ${formatDateTime(item.refundedAt)}`}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="text-[11px] text-text-muted">상품금액</p>
+                          <p
+                            className={cn(
+                              'font-medium text-text-primary',
+                              isFullyRefunded && 'text-text-muted line-through',
+                            )}
+                          >
+                            {formatCurrency(item.itemAmount)}
                           </p>
+                          {item.refundedAmount > 0 && (
+                            <p className="text-xs font-semibold text-red-600">
+                              환불 -{formatCurrency(item.refundedAmount)}
+                            </p>
+                          )}
                         </div>
                       </div>
-                      <div className="shrink-0 text-right">
-                        <p className="text-[11px] text-text-muted">상품금액</p>
-                        <p className="font-medium text-text-primary">{formatCurrency(item.itemAmount)}</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
 
@@ -335,15 +438,15 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
                   </div>
                   {order.refundedAmount > 0 && (
                     <>
-                      <div className="detail-row">
-                        <dt className="text-text-muted">환불액</dt>
-                        <dd className="font-medium text-text-primary">
+                      <div className="detail-row rounded-xl bg-red-50 px-3 py-2.5">
+                        <dt className="font-semibold text-red-700">환불액</dt>
+                        <dd className="font-bold text-red-600">
                           -{formatCurrency(order.refundedAmount)}
                         </dd>
                       </div>
-                      <div className="detail-row">
-                        <dt className="text-text-muted">남은 금액</dt>
-                        <dd className="font-medium text-text-primary">
+                      <div className="detail-row px-3">
+                        <dt className="font-semibold text-text-primary">남은 금액</dt>
+                        <dd className="font-bold text-text-primary">
                           {formatCurrency(order.amount - order.refundedAmount)}
                         </dd>
                       </div>
@@ -379,4 +482,29 @@ export function ProductOrderDetailModal({ orderId, onClose }: ProductOrderDetail
       )}
     </>
   );
+}
+
+type RefundSummary = {
+  isFull: boolean;
+  refundedQuantity: number;
+  lastRefundedAt: string | null;
+  items: NonNullable<ProductOrder['items']>;
+};
+
+/** 환불 내역 요약. 환불이 없으면 null. */
+function summarizeRefund(order: ProductOrder): RefundSummary | null {
+  if (order.refundedAmount <= 0 && order.status !== 'refunded') return null;
+  const items = (order.items ?? []).filter((item) => item.refundedQuantity > 0);
+  const lastRefundedAt =
+    items
+      .map((item) => item.refundedAt)
+      .filter((date): date is string => !!date)
+      .sort()
+      .at(-1) ?? null;
+  return {
+    isFull: order.status === 'refunded',
+    refundedQuantity: items.reduce((sum, item) => sum + item.refundedQuantity, 0),
+    lastRefundedAt,
+    items,
+  };
 }

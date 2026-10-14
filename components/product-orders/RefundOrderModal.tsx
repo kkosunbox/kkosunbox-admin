@@ -10,7 +10,7 @@ import {
   selectedRefundItems,
 } from '@/components/product-orders/ProductOrderItemQuantityPicker';
 import { productOrdersApi, getErrorMessage } from '@/lib/api';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, getProductOrderCustomerLabel } from '@/lib/utils';
 import type { ProductOrder } from '@/types';
 
 interface RefundOrderModalProps {
@@ -87,7 +87,7 @@ export function RefundOrderModal({ order, onClose, onSuccess }: RefundOrderModal
           <div className="rounded-xl bg-surface-muted p-4 text-sm">
             <p className="text-text-muted">환불 대상</p>
             <p className="mt-1 font-semibold text-text-primary">{order.orderName}</p>
-            <p className="text-text-secondary">{order.user?.email ?? `주문 #${order.id}`}</p>
+            <p className="text-text-secondary">{getProductOrderCustomerLabel(order)}</p>
             <p className="mt-1 font-bold text-brand-500">{formatCurrency(order.amount)}</p>
             {order.refundedAmount > 0 && (
               <p className="text-xs text-text-muted">

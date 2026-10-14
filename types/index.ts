@@ -240,6 +240,7 @@ export interface ProductOrderItem {
   refundedAmount: number;
   relatedPlanId: number | null;
   imageUrl?: string | null;
+  refundedAt?: string | null;
 }
 
 export interface AppliedProductCoupon {
@@ -258,8 +259,9 @@ export interface AppliedProductCoupon {
 
 export interface ProductOrder {
   id: number;
-  userId: number;
-  user?: User;
+  /** 비회원 주문이면 null */
+  userId: number | null;
+  user?: User | null;
   orderName: string;
   items: ProductOrderItem[];
   totalQuantity: number;
@@ -270,8 +272,18 @@ export interface ProductOrder {
   shippingFee: number;
   refundedAmount: number;
   amount: number;
-  deliveryAddressId: number;
-  deliveryAddress?: DeliveryAddress;
+  /** 비회원 주문이면 null (배송지는 아래 스냅샷 필드에 저장) */
+  deliveryAddressId: number | null;
+  deliveryAddress?: DeliveryAddress | null;
+  /* 비회원 주문 스냅샷 */
+  ordererName?: string | null;
+  ordererPhone?: string | null;
+  receiverName?: string | null;
+  receiverPhone?: string | null;
+  zipCode?: string | null;
+  address?: string | null;
+  addressDetail?: string | null;
+  memo?: string | null;
   status: PaymentStatus;
   paymentKey?: string | null;
   orderId?: string | null;

@@ -14,6 +14,7 @@ import { CancelOrderModal } from '@/components/product-orders/CancelOrderModal';
 import { RefundOrderModal } from '@/components/product-orders/RefundOrderModal';
 import { ProductOrderDetailModal } from '@/components/product-orders/ProductOrderDetailModal';
 import { PromoListCell } from '@/components/shared/CouponReferralInfo';
+import { ProductOrderCustomer } from '@/components/product-orders/ProductOrderCustomer';
 import {
   PAYMENT_STATUS_MAP,
   DELIVERY_STATUS_MAP,
@@ -200,7 +201,7 @@ export function ProductOrderList() {
                     >
                       <td className="table-td font-mono text-xs text-text-muted">#{order.id}</td>
                       <td className="table-td">
-                        <p className="text-sm text-text-primary">{order.user?.email ?? '-'}</p>
+                        <ProductOrderCustomer order={order} className="text-sm text-text-primary" />
                       </td>
                       <td className="table-td">
                         <p className="font-medium text-text-primary">{order.orderName}</p>

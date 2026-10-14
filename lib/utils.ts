@@ -70,6 +70,54 @@ export const DELIVERY_STATUS_MAP: Record<
   },
 };
 
+export function isGuestProductOrder(order: ProductOrder): boolean {
+  return order.userId == null;
+}
+
+/** 목록/모달에 표시할 고객 라벨. 회원은 이메일, 비회원은 주문자명. */
+export function getProductOrderCustomerLabel(order: ProductOrder): string {
+  if (order.user?.email) return order.user.email;
+  if (order.ordererName) return order.ordererName;
+  return `주문 #${order.id}`;
+}
+
+export type ProductOrderShipping = {
+  receiverName: string;
+  nickname?: string | null;
+  phoneNumber: string | null;
+  zipCode: string;
+  address: string;
+  addressDetail?: string | null;
+  memo?: string | null;
+};
+
+/** 배송 정보. 주문 스냅샷을 우선 쓰고, 없으면 연결된 배송지를 쓴다. */
+export function getProductOrderShipping(
+  order: ProductOrder,
+): ProductOrderShipping | null {
+  if (order.address && order.zipCode) {
+    return {
+      receiverName: order.receiverName ?? order.ordererName ?? "-",
+      phoneNumber: order.receiverPhone ?? null,
+      zipCode: order.zipCode,
+      address: order.address,
+      addressDetail: order.addressDetail,
+      memo: order.memo,
+    };
+  }
+  const deliveryAddress = order.deliveryAddress;
+  if (!deliveryAddress) return null;
+  return {
+    receiverName: deliveryAddress.receiverName,
+    nickname: deliveryAddress.nickname,
+    phoneNumber: deliveryAddress.phoneNumber,
+    zipCode: deliveryAddress.zipCode,
+    address: deliveryAddress.address,
+    addressDetail: deliveryAddress.addressDetail,
+    memo: deliveryAddress.memo,
+  };
+}
+
 export function remainingItemQuantity(item: ProductOrderItem): number {
   return Math.max(0, item.quantity - item.refundedQuantity);
 }

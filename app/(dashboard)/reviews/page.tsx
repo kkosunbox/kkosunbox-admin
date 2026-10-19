@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Star, Image as ImageIcon, Eye, EyeOff, Loader2, ExternalLink } from 'lucide-react';
+import { Star, Eye, EyeOff, Loader2, ExternalLink, Trash2, X } from 'lucide-react';
 import { reviewsApi, plansApi, productsApi, getErrorMessage } from '@/lib/api';
 import { Modal } from '@/components/ui/Modal';
+import { ImageLightbox } from '@/components/ui/ImageLightbox';
 import { Badge } from '@/components/ui/Badge';
 import { Pagination } from '@/components/ui/Pagination';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -14,7 +15,15 @@ import type { Product, Review, SubscriptionPlan } from '@/types';
 
 const LIMIT = 20;
 
+const MAX_TABLE_THUMBNAILS = 3;
+
 type HiddenFilter = 'all' | 'true' | 'false';
+
+type LightboxState = {
+  reviewId: number;
+  images: string[];
+  index: number;
+};
 
 function StarRating({ rating }: { rating: number }) {
   const full = Math.floor(rating);
@@ -47,6 +56,7 @@ export default function ReviewsPage() {
   const [planIdFilter, setPlanIdFilter] = useState<string>('');
   const [productIdFilter, setProductIdFilter] = useState<string>('');
   const [selectedReviewId, setSelectedReviewId] = useState<number | null>(null);
+  const [lightbox, setLightbox] = useState<LightboxState | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['reviews', page, hiddenFilter, planIdFilter, productIdFilter],
@@ -96,6 +106,38 @@ export default function ReviewsPage() {
     },
     onError: (err) => alert(getErrorMessage(err)),
   });
+
+  const removeImagesMutation = useMutation({
+    mutationFn: ({ id, imageUrls }: { id: number; imageUrls?: string[] }) =>
+      reviewsApi.removeImages(id, imageUrls),
+    onSuccess: (remainingUrls, { id }) => {
+      void queryClient.invalidateQueries({ queryKey: ['reviews'] });
+      setLightbox((prev) => {
+        if (!prev || prev.reviewId !== id) return prev;
+        if (remainingUrls.length === 0) return null;
+        return {
+          ...prev,
+          images: remainingUrls,
+          index: Math.min(prev.index, remainingUrls.length - 1),
+        };
+      });
+    },
+    onError: (err) => alert(getErrorMessage(err)),
+  });
+
+  function removeImage(reviewId: number, url: string) {
+    if (!confirm('이 이미지를 리뷰에서 제거하시겠습니까?')) return;
+    removeImagesMutation.mutate({ id: reviewId, imageUrls: [url] });
+  }
+
+  function removeAllImages(reviewId: number) {
+    if (!confirm('리뷰의 모든 이미지를 제거하시겠습니까? 리뷰 내용은 유지됩니다.')) return;
+    removeImagesMutation.mutate({ id: reviewId });
+  }
+
+  function openLightbox(reviewId: number, images: string[], index: number) {
+    setLightbox({ reviewId, images, index });
+  }
 
   const reviews: Review[] = data?.items ?? [];
   const total: number = data?.total ?? 0;
@@ -254,10 +296,30 @@ export default function ReviewsPage() {
                     </td>
                     <td className="table-td">
                       {review.imageUrls && review.imageUrls.length > 0 ? (
-                        <span className="flex items-center gap-1 rounded-lg bg-brand-50 px-2 py-1 text-xs font-medium text-brand-600">
-                          <ImageIcon size={11} />
-                          {review.imageUrls.length}장
-                        </span>
+                        <div className="flex items-center gap-1">
+                          {review.imageUrls.slice(0, MAX_TABLE_THUMBNAILS).map((url, idx) => (
+                            <button
+                              key={url}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openLightbox(review.id, review.imageUrls ?? [], idx);
+                              }}
+                              className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg border border-border"
+                            >
+                              <img
+                                src={url}
+                                alt={`리뷰 이미지 ${idx + 1}`}
+                                className="h-full w-full object-cover transition-transform hover:scale-110"
+                              />
+                              {idx === MAX_TABLE_THUMBNAILS - 1 &&
+                                review.imageUrls!.length > MAX_TABLE_THUMBNAILS && (
+                                  <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-xs font-semibold text-white">
+                                    +{review.imageUrls!.length - MAX_TABLE_THUMBNAILS}
+                                  </span>
+                                )}
+                            </button>
+                          ))}
+                        </div>
                       ) : (
                         <span className="text-xs text-text-muted">없음</span>
                       )}
@@ -437,24 +499,43 @@ export default function ReviewsPage() {
             {/* 이미지 */}
             {detail.imageUrls && detail.imageUrls.length > 0 && (
               <div>
-                <p className="mb-2 text-sm font-medium text-text-secondary">
-                  첨부 이미지 ({detail.imageUrls.length}장)
-                </p>
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-sm font-medium text-text-secondary">
+                    첨부 이미지 ({detail.imageUrls.length}장)
+                  </p>
+                  <button
+                    onClick={() => removeAllImages(detail.id)}
+                    disabled={removeImagesMutation.isPending}
+                    className="flex items-center gap-1 rounded-lg bg-red-50 px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-100 disabled:opacity-50"
+                  >
+                    <Trash2 size={12} /> 이미지 전체 제거
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {detail.imageUrls.map((url, idx) => (
-                    <a
-                      key={idx}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group overflow-hidden rounded-xl border border-border"
+                    <div
+                      key={url}
+                      className="group relative overflow-hidden rounded-xl border border-border"
                     >
-                      <img
-                        src={url}
-                        alt={`리뷰 이미지 ${idx + 1}`}
-                        className="aspect-square w-full object-cover transition-transform group-hover:scale-105"
-                      />
-                    </a>
+                      <button
+                        onClick={() => openLightbox(detail.id, detail.imageUrls ?? [], idx)}
+                        className="block w-full"
+                      >
+                        <img
+                          src={url}
+                          alt={`리뷰 이미지 ${idx + 1}`}
+                          className="aspect-square w-full object-cover transition-transform group-hover:scale-105"
+                        />
+                      </button>
+                      <button
+                        onClick={() => removeImage(detail.id, url)}
+                        disabled={removeImagesMutation.isPending}
+                        className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-red-500 disabled:opacity-50"
+                        aria-label="이미지 제거"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -493,6 +574,15 @@ export default function ReviewsPage() {
           </div>
         ) : null}
       </Modal>
+
+      <ImageLightbox
+        images={lightbox?.images ?? []}
+        index={lightbox?.index ?? null}
+        onClose={() => setLightbox(null)}
+        onIndexChange={(index) => setLightbox((prev) => (prev ? { ...prev, index } : prev))}
+        onRemove={lightbox ? (url) => removeImage(lightbox.reviewId, url) : undefined}
+        isRemoving={removeImagesMutation.isPending}
+      />
     </div>
   );
 }

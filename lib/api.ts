@@ -614,6 +614,12 @@ export const reviewsApi = {
 
   unhide: (id: number) =>
     apiClient.patch(`/admin/reviews/${id}/unhide`).then((r) => r.data.data),
+
+  /** imageUrls 미지정 시 전체 이미지 제거. 남은 이미지 URL 목록을 반환한다. */
+  removeImages: (id: number, imageUrls?: string[]): Promise<string[]> =>
+    apiClient
+      .patch(`/admin/reviews/${id}/images/remove`, { imageUrls })
+      .then((r) => r.data.data),
 };
 
 // ─── Settings ─────────────────────────────────────────────────────────────────

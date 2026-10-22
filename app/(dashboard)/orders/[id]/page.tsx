@@ -193,7 +193,7 @@ export default function OrderDetailPage() {
           )}
 
           <CouponDetailSection coupon={subscription?.coupon} />
-          <ReferralDetailSection referral={subscription?.referral} />
+          {isAdmin && <ReferralDetailSection referral={subscription?.referral} />}
 
           {/* 반려견 정보 (체크리스트·추천 결과 포함) */}
           {petProfile && (

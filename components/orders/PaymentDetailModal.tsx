@@ -243,7 +243,7 @@ export function PaymentDetailModal({ paymentId, onClose }: PaymentDetailModalPro
             )}
 
             <CouponDetailSection coupon={subscription?.coupon} />
-            <ReferralDetailSection referral={subscription?.referral} />
+            {isAdmin && <ReferralDetailSection referral={subscription?.referral} />}
 
             {petProfile && (
                 <section className="detail-section">

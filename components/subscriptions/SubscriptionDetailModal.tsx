@@ -10,6 +10,7 @@ import {
   ReferralDetailSection,
 } from '@/components/shared/CouponReferralInfo';
 import { subscriptionsApi } from '@/lib/api';
+import { useAuth } from '@/providers/AuthProvider';
 import {
   SUBSCRIPTION_STATUS_MAP,
   formatCurrency,
@@ -26,6 +27,8 @@ export function SubscriptionDetailModal({
   subscriptionId,
   onClose,
 }: SubscriptionDetailModalProps) {
+  const { admin } = useAuth();
+  const isAdmin = admin?.role === 'admin';
   const { data: subscription, isLoading } = useQuery<UserSubscription>({
     queryKey: ['subscriptions', subscriptionId],
     queryFn: () => subscriptionsApi.getById(subscriptionId!),
@@ -217,7 +220,7 @@ export function SubscriptionDetailModal({
             )}
 
             <CouponDetailSection coupon={subscription.coupon} />
-            <ReferralDetailSection referral={subscription.referral} />
+            {isAdmin && <ReferralDetailSection referral={subscription.referral} />}
 
             {petProfile && (
               <section className="detail-section">

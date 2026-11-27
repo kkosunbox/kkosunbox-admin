@@ -149,6 +149,20 @@ export function SubscriptionDetailModal({
             )}
           </div>
 
+          {(subscription.cancelReason || subscription.cancelReasonDetail) && (
+            <div className="mt-3 rounded-xl bg-red-50 px-4 py-3">
+              <p className="text-xs font-semibold text-red-500">해지 사유</p>
+              <p className="mt-1 text-sm font-semibold text-text-primary">
+                {subscription.cancelReason ?? '미입력'}
+              </p>
+              {subscription.cancelReasonDetail && (
+                <p className="mt-1 whitespace-pre-wrap break-words text-sm text-text-secondary">
+                  {subscription.cancelReasonDetail}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Sections */}
           <div className="detail-sections">
             {subscription.user && (

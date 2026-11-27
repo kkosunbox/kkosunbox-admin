@@ -170,6 +170,22 @@ export default function CustomerDetailPage() {
         {influencerError && (
           <p className="mt-2 text-xs text-red-500">{influencerError}</p>
         )}
+        {(user.withdrawalReason || user.withdrawalReasonDetail || user.withdrawalOriginalEmail) && (
+          <div className="mt-4 rounded-xl bg-red-50 px-4 py-3">
+            <p className="text-xs font-semibold text-red-500">회원 탈퇴</p>
+            {user.withdrawalOriginalEmail && (
+              <p className="mt-1 break-all text-xs text-text-muted">원본 이메일: {user.withdrawalOriginalEmail}</p>
+            )}
+            <p className="mt-1 text-sm font-semibold text-text-primary">
+              {user.withdrawalReason ?? '사유 미입력'}
+            </p>
+            {user.withdrawalReasonDetail && (
+              <p className="mt-1 whitespace-pre-wrap break-words text-sm text-text-secondary">
+                {user.withdrawalReasonDetail}
+              </p>
+            )}
+          </div>
+        )}
         <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
           <div className="rounded-xl bg-white/60 px-4 py-3 backdrop-blur-sm">
             <p className="text-xs text-text-muted">가입일</p>
@@ -256,6 +272,12 @@ export default function CustomerDetailPage() {
                             <span className="ml-1.5 font-medium text-blue-500">(건너뜀)</span>
                           )}
                         </p>
+                        {(sub.cancelReason || sub.cancelReasonDetail) && (
+                          <p className="mt-0.5 whitespace-pre-wrap break-words text-xs text-text-secondary">
+                            해지 사유: {sub.cancelReason ?? '미입력'}
+                            {sub.cancelReasonDetail ? ` · ${sub.cancelReasonDetail}` : ''}
+                          </p>
+                        )}
                       </div>
                       <div className="flex flex-wrap justify-end gap-1">
                         {sub.isPaused

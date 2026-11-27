@@ -156,6 +156,10 @@ export interface UserSubscription {
   anchorDay: number;
   nextBillingDate: string;
   cancelledAt?: string | null;
+  /** 사용자가 선택한 해지 사유 */
+  cancelReason?: string | null;
+  /** 해지 사유 추가 의견 */
+  cancelReasonDetail?: string | null;
   renewalFailureCount: number;
   isPaused: boolean;
   plan?: SubscriptionPlan;
@@ -322,6 +326,12 @@ export interface User {
   influencerContractExpiresAt?: string | null;
   influencerProfile?: InfluencerProfile | null;
   lastLoginAt?: string | null;
+  /** 회원 탈퇴 사유 */
+  withdrawalReason?: string | null;
+  /** 회원 탈퇴 사유 추가 의견 */
+  withdrawalReasonDetail?: string | null;
+  /** 탈퇴 직전 원본 이메일 */
+  withdrawalOriginalEmail?: string | null;
   createdAt: string;
   updatedAt: string;
 }
